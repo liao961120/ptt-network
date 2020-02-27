@@ -1,0 +1,12 @@
+test.py
+*.log
+
+data/corpus
+wiki.zh.vector
+wiki_zh-vec.npy
+wiki_zh-vocab.pkl
+
+all_edges.jsonl
+all_nodes.pkl
+
+__pycache__
