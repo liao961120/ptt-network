@@ -44,7 +44,7 @@ for post in posts:
             'date': post['date'],
             'board': post['board'],
             'content': '\u3000'.join(preprocess.segment(cmt['content'])),
-            'type': cmt['type']
+            'type_': cmt['type']
         }
         all_nodes[cmt['author']].add_comment(**comment)
     
