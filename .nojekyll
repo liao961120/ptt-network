@@ -1,0 +1,44 @@
+---
+link-citations: yes
+output:
+  bookdown::html_document2:
+    number_sections: false
+    self_contained: true
+    pandoc_args: "--mathjax"
+    mathjax: NULL
+    theme: NULL
+    template: /home/liao/R/x86_64-pc-linux-gnu-library/3.4/rmarkdown/rmd/fragment/default.html
+---
+<!--For external images, set self_contained: false-->
+
+<!--yaml
+---
+mermaid: false
+mathjax: false
+mathjax_autoNumber: false
+highlight: true
+title: ""
+description: ""
+tags: [R, DS, bash, 中文]
+---
+yaml-->
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	fig.dim = c(7, 4),
+	message = FALSE,
+	warning = FALSE,
+	comment = "",
+	#fig.path = "../../assets/",
+	out.width = "100%"
+)
+library(knitr)
+```
+
+
+
+
+<!--more-->
+
+
