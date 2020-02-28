@@ -206,7 +206,7 @@ class Node():
         }, ensure_ascii=False)
     
 
-    def add_comment(self, date, content, type="pos"):
+    def add_comment(self, date, content, board, type_):
         """Add comment to corpus
         
         Parameters
@@ -216,39 +216,78 @@ class Node():
         content : str
             Segmented comment string, with space separating each
             word.
-        type : str
+        board: str
+            Board name.
+        type_ : str
             Comment type. One of ``pos``, ``neg``, or ``neu``.
+        
+        Notes
+        -----
+        Corpus Structure
+
+        .. code-block:: python
+
+            {
+              '2019-01-20': [
+                {   
+                  type: "pos",
+                  content: "segmented string"
+                },
+                {...}
+              ],
+              '2020-01-20': [...],
+              ...
+            }
         """
 
         if self.corpus.get(date) is None:
             self.corpus[date] = []
         
         self.corpus[date].append({
-            "type": type,
-            "content": content
+            "type": type_,
+            "content": content,
+            "board": board
         })
 
-        '''
-        Corpus Structure
-        ----------------
-
-        {
-            '2019-01-20': [
-                {   
-                    type: "pos",
-                    content: "segmented string"
-                },
-                {...}
-            ],
-            '2020-01-20': [...],
-            ...
-        }
-        '''
-    
 
     def getVocab(self, start="1900-01-01", end="2050-12-31", boards=None, force=False):
+        """Get vocabulary in specific time range and boards
         
-        if force or self.vocab.get(f"{start}_{end}") is None:
+        Parameters
+        ----------
+        start : str, optional
+            Start date in isoformat, by default "1900-01-01"
+        end : str, optional
+            End date in isoformat, by default "2050-12-31"
+        boards : set, optional
+            A set of boards to include, by default None
+        force : bool, optional
+            Force update cached vocabulary, by default False
+        
+        Returns
+        -------
+        list
+            A list of words.
+
+        Notes
+        --------------------
+        Vocabulary Structure
+
+        .. code-block:: python
+        
+            {
+              '1900-01-01_2050-12-31' : ['word1', 'word2', ...],
+              '1900-01-01_2050-12-31_Gossiping-Boy-girl' : ['word1', ...],
+              ...
+            }
+        """
+
+        if board is not None:
+            query = f"{start}_{end}_{'-'.join(b for b in boards)}"
+        else:
+            query = f"{start}_{end}"
+
+        if force or self.vocab.get(query) is None:
 
             start_d = datetime.date.fromisoformat(start)
             end_d = datetime.date.fromisoformat(end)
@@ -266,19 +305,10 @@ class Node():
                     else:
                         raw_content += '\u3000'.join(c['content'] for c in cmts)
 
-            # Renew comment
-            self.vocab[f"{start}_{end}"] = list(set(raw_content.split('\u3000')))
+            # Renew vocabulary
+            self.vocab[query] = list(set(raw_content.split('\u3000')))
         
-        '''
-        Vocab Structure
-        ---------------
-
-        {
-            '1900-01-01_2050-12-31' : ['word1', 'word2', ...],
-            ...
-        }
-        '''
-        return self.vocab[f"{start}_{end}"]
+        return self.vocab[query]
 
 
 def load_Nodes(path):
