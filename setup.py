@@ -8,15 +8,15 @@ setuptools.setup(
     version="0.0.1",
     author="Yongfu Liao",
     author_email="liao961120@gmail.com",
-    description="Keyword in context with pos tag search",
+    description="PTT Comments as Social Network Data",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/liao961120/kwic-backend",
+    url="https://github.com/liao961120/ptt-network",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.6',
+    python_requires='>=3.7',
 )
