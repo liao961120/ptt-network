@@ -73,13 +73,3 @@ with open(NODE_FILE, "wb") as f:
     pickle.dump(all_nodes, f)
 
 logging.info(f"Finished in {(time() - start0)/60:.2} mins")
-
-
-#%%
-#import pickle
-#with open("all_nodes.pkl", "rb") as f:
-#    nodes = pickle.load(f)
-
-#%%
-#set(len(n.corpus.items()) for k, n in nodes.items())
-#nodes['kevin190'].corpus
