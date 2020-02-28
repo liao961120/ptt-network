@@ -3,7 +3,7 @@ import json
 import jieba
 from datetime import datetime
 
-def load_comments_data(boards=["Gossiping"], years=[2009]):
+def load_comments_data_from_corpus(boards=["Gossiping"], years=[2009]):
     
     posts = []
 

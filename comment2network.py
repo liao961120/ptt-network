@@ -1,15 +1,16 @@
-NODE_FILE = 'all_nodes.pkl'
-EDGE_FILE = 'all_edges.jsonl'
+NODE_FILE = 'data/network/all_nodes.pkl'
+EDGE_FILE = 'data/network/all_edges.jsonl'
 
 # TODO: Separate nodes and edge processing
 import os
-import utils
-import graph
 import itertools
 import json
 import pickle
-from time import time
 import logging
+from time import time
+from pttnet import preprocess
+from pttnet import graph
+
 logging.basicConfig(filename='test.log', filemode='w', format='%(asctime)s %(message)s', datefmt='%Y/%m/%d %I:%M:%S', level=logging.DEBUG)
 start0 = time()  # Time execution
 
@@ -18,7 +19,7 @@ if os.path.exists(EDGE_FILE):
     os.remove(EDGE_FILE)
 
 # Read post data
-posts = utils.load_comments_data(boards=["Gossiping"], years=[2010])
+posts = preprocess.load_comments_data_from_corpus(boards=["Gossiping"], years=[2010])
 
 logging.info(f"Start processing posts. Executed {time() - start0} secs")
 start = time()  # Time execution
@@ -41,7 +42,8 @@ for post in posts:
         # Add comments
         comment = {
             'date': post['date'],
-            'content': ' '.join(utils.segment(cmt['content'])),
+            'board': post['board'],
+            'content': '\u3000'.join(preprocess.segment(cmt['content'])),
             'type': cmt['type']
         }
         all_nodes[cmt['author']].add_comment(**comment)
