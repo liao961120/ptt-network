@@ -10,3 +10,5 @@ all_edges.jsonl
 all_nodes.pkl
 
 __pycache__
+
+docs
