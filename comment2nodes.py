@@ -16,7 +16,7 @@ start0 = time()  # Time execution
 # Parse command line arguments
 BOARD = sys.argv[1]
 YEARS = [y for y in sys.argv[2].split(',')]
-OUT_FILE = f'data/network/{BOARD}_nodes.pkl'
+OUT_DIR = 'data/network/nodes'
 
 # Check command line arguments
 if BOARD not in os.listdir("data/corpus/"): 
@@ -26,8 +26,6 @@ for y in YEARS:
     if y not in years:
         raise Exception(f"data/corpus/{BOARD}/{y} doesn't exist!") 
 
-# Clean up
-if os.path.exists(OUT_FILE): os.remove(OUT_FILE)
 
 # Read post data
 posts = preprocess.load_comments_data_from_corpus(boards=[BOARD], years=YEARS)
@@ -58,14 +56,19 @@ for i, post in enumerate(posts):
         }
         all_nodes[cmt['author']].add_comment(**comment)
     
-    # Show progress
-    if i % int(post_num/20) == 0: logging.info(f"Progressed: {i/post_num:.2%}")
+    # Show progress / save nodes to disk
+    if i % int(post_num/20) == 0 or i == post_num - 1: 
+        logging.info(f"Progressed: {(i+1)/post_num:.2%}")
+        
+        # Write node data to disk
+        for id_, node in all_nodes.items():
+            node._saveNode(dir_=OUT_DIR)
+        
+        # Clean up (release memory)
+        del all_nodes
+        all_nodes = {}
 
 
 logging.info(f"Processed {cmt_count} comments ({post_num} posts) in {(time() - start)/60:.2} mins")
-
-# Save node data
-with open(OUT_FILE, "wb") as f:
-    pickle.dump(all_nodes, f)
 
 logging.info(f"Finished in {(time() - start0)/60:.2} mins")

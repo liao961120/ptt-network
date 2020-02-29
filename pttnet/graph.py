@@ -3,7 +3,9 @@ import datetime
 import jieba
 import json
 import pickle
+import os
 import networkx as nx
+from pttnet.utils import merge_dicts
 
 
 def Graph(count_edges_in, edge_condition=None, MG=None, edge_attrs_to_keep=['date', 'opinion'], node_path="all_nodes.pkl", edge_path="all_edges.jsonl"):
@@ -164,12 +166,21 @@ def loadMGraph(edge_condition, edge_attrs_to_keep=['date', 'opinion'], node_path
 
 class Node():
 
-    def __init__(self, id_: [str, int]=None, fromJson: str=None):
-        if id_ is None and fromJson is None:
-            raise Exception("Need either id_ or fromJson")
+    def __init__(self, id_: str, from_disk: str=None):
+        """Initialize a node object
+        
+        Parameters
+        ----------
+        id_ : str
+            Node id
+        from_disk : str, optional
+            Path to the directory of the node file, 
+            e.g., ``data/network/nodes``
+            by default None
+        """
 
-        if fromJson is not None:
-            self.__fromJson(fromJson)
+        if from_disk is not None:
+            self.__loadNode(id_, from_disk)
         else:
             self.id = id_
             self.corpus = {}
@@ -193,20 +204,50 @@ class Node():
         return int('1' + hash_str)
 
 
-    def __fromJson(self, json_str: str):
-        node = json.loads(json_str)
+    def __loadNode(self, id_, dir_="data/network/nodes"):
+        fp_stats = os.path.join(dir_, id_ + '-stats.json')
+        fp_corp = os.path.join(dir_, id_ + '-corp.jsonl')
+
+        # Load node data
+        with open(fp_stats) as f:
+            node = json.load(f)
         self.id = node['id']
-        self.corpus = node['corpus']
+        self.corpus_stats = node['corpus_stats']
         self.vocab = node['vocab']
 
+        # Load corpus
+        with open(fp_corp) as f:
+            self.corpus = merge_dicts(json.loads(l) for l in f)
 
-    def __toJson(self):
-        return json.dumps({
-            "id": self.id,
-            "corpus": self.corpus,
-            "vocab": self.vocab
-        }, ensure_ascii=False)
-    
+
+    def _saveNode(self, dir_="data/network/nodes"):
+        fp_stats = os.path.join(dir_, self.id + '-stats.json')
+        fp_corp = os.path.join(dir_, self.id + '-corp.jsonl')
+
+        # Write new file if node file doesn exist
+        if not os.path.exists(fp_stats):
+            with open(fp_stats, "w") as f:
+                json.dump({
+                    "id": self.id,
+                    "corpus_stats": self.corpus_stats,
+                    "vocab": self.vocab
+                }, f, ensure_ascii=False)
+            
+        with open(fp_corp, "a") as f:
+            f.write(json.dumps(self.corpus, ensure_ascii=False))
+            f.write('\n')
+
+
+    def cacheStats(self, dir_="data/network/nodes/"):
+        fp_stats = os.path.join(dir_, self.id + '-stats.json')
+
+        with open(fp_stats, "w") as f:
+            json.dump({
+                "id": self.id,
+                "corpus_stats": self.corpus_stats,
+                "vocab": self.vocab
+            }, f, ensure_ascii=False)
+
 
     def add_comment(self, date, content, board, type_):
         """Add comment to corpus
@@ -390,9 +431,11 @@ class Node():
         return stats, vocab
 
 
-def load_Nodes(path):
-    with open(path, "rb") as f:
-        nodes = pickle.load(f)
+def load_Nodes(path="data/network/nodes"):
+    node_ids = { f[:-11] for f in os.listdir("data/network/nodes") }
+    nodes = {
+        id_: Node(id_, from_disk=path) for id_ in node_ids
+    }
     return nodes
 
 
