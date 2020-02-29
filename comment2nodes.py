@@ -15,7 +15,7 @@ start0 = time()  # Time execution
 
 # Parse command line arguments
 BOARD = sys.argv[1]
-YEARS = [int(y) for y in sys.argv[2].split(',')]
+YEARS = [y for y in sys.argv[2].split(',')]
 OUT_FILE = f'data/network/{BOARD}_nodes.pkl'
 
 # Check command line arguments
@@ -31,7 +31,7 @@ if os.path.exists(OUT_FILE): os.remove(OUT_FILE)
 
 # Read post data
 posts = preprocess.load_comments_data_from_corpus(boards=[BOARD], years=YEARS)
-post_num = len(post)
+post_num = len(posts)
 
 logging.info(f"Start processing posts. Executed {time() - start0} secs")
 start = time()  # Time execution

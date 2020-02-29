@@ -1,4 +1,4 @@
-# Usage: python3 comment2nodes.py <board_name> <year1,year2,...>
+# Usage: python3 comment2edges.py <board_name> <year1,year2,...>
 
 import os
 import sys
@@ -15,7 +15,7 @@ start0 = time()  # Time execution
 
 # Parse command line arguments
 BOARD = sys.argv[1]
-YEARS = [int(y) for y in sys.argv[2].split(',')]
+YEARS = [y for y in sys.argv[2].split(',')]
 
 # Check command line arguments
 if BOARD not in os.listdir("data/corpus/"): 
@@ -27,7 +27,7 @@ for y in YEARS:
 
 # Read post data
 posts = preprocess.load_comments_data_from_corpus(boards=[BOARD], years=YEARS)
-post_num = len(post)
+post_num = len(posts)
 
 logging.info(f"Start processing posts. Executed {time() - start0} secs")
 start = time()  # Time execution
