@@ -41,7 +41,7 @@
 <span class="kn">from</span> <span class="nn">pttnet.utils</span> <span class="kn">import</span> <span class="n">merge_dicts</span>
 
 
-<div class="viewcode-block" id="Graph"><a class="viewcode-back" href="../../doc/graph.html#pttnet.graph.Graph">[docs]</a><span class="k">def</span> <span class="nf">Graph</span><span class="p">(</span><span class="n">count_edges_in</span><span class="p">,</span> <span class="n">edge_condition</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">MG</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edge_attrs_to_keep</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">,</span> <span class="s1">&#39;opinion&#39;</span><span class="p">],</span> <span class="n">node_path</span><span class="o">=</span><span class="s2">&quot;all_nodes.pkl&quot;</span><span class="p">,</span> <span class="n">edge_path</span><span class="o">=</span><span class="s2">&quot;all_edges.jsonl&quot;</span><span class="p">):</span>
+<div class="viewcode-block" id="Graph"><a class="viewcode-back" href="../../doc/graph.html#pttnet.graph.Graph">[docs]</a><span class="k">def</span> <span class="nf">Graph</span><span class="p">(</span><span class="n">count_edges_in</span><span class="p">,</span> <span class="n">edge_condition</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">MG</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edge_attrs_to_keep</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">,</span> <span class="s1">&#39;opinion&#39;</span><span class="p">],</span> <span class="n">node_path</span><span class="o">=</span><span class="s2">&quot;data/network/nodes&quot;</span><span class="p">,</span> <span class="n">edge_path</span><span class="o">=</span><span class="s2">&quot;all_edges.jsonl&quot;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Generate nx.Graph from PTT comment data</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
@@ -75,7 +75,7 @@
 <span class="sd">        Edge attributes to keep when reading file from disk, by default [&#39;date&#39;, &#39;opinion&#39;]. </span>
 <span class="sd">        Data passed to :py:func:`.loadMGraph`.</span>
 <span class="sd">    node_path : str, optional</span>
-<span class="sd">        File path to node file, by default &quot;all_nodes.pkl&quot;. </span>
+<span class="sd">        Path to the directory of node files, by default &quot;data/network/nodes&quot;. </span>
 <span class="sd">        Data passed to :py:func:`.loadMGraph`.</span>
 <span class="sd">    edge_path : str, optional</span>
 <span class="sd">        File path to edge file, by default &quot;all_edges.jsonl&quot;. </span>
@@ -98,7 +98,7 @@
 <span class="sd">    ...         ), </span>
 <span class="sd">    ...     &#39;opinion&#39;: set([&#39;pos-pos&#39;, &#39;pos-neg&#39;, &#39;pos-neu&#39;, &#39;neg-pos&#39;, &#39;neg-neg&#39;, &#39;neg-neu&#39;])</span>
 <span class="sd">    ... }</span>
-<span class="sd">    &gt;&gt;&gt; MG = loadMGraph(edge_condition=conditions, node_path=&quot;data/all_nodes.pkl&quot;, edge_path=&quot;data/all_edges.jsonl&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; MG = loadMGraph(edge_condition=conditions, node_path=&quot;data/network/nodes&quot;, edge_path=&quot;data/all_edges.jsonl&quot;)</span>
 <span class="sd">    &gt;&gt;&gt; </span>
 <span class="sd">    &gt;&gt;&gt; criteria = {</span>
 <span class="sd">    ... &#39;opinion&#39;: [&#39;pos-pos&#39;, &#39;neg-neg&#39;],</span>
@@ -107,7 +107,7 @@
 
 <span class="sd">    Alternatively, directly create a ``networkx.Graph`` from reading disk file:</span>
 
-<span class="sd">    &gt;&gt;&gt; G = Graph(edge_condition=conditions, count_edges_in=criteria, node_path=&quot;data/all_nodes.pkl&quot;, edge_path=&quot;data/all_edges.jsonl&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; G = Graph(edge_condition=conditions, count_edges_in=criteria, node_path=&quot;data/network/nodes&quot;, edge_path=&quot;data/all_edges.jsonl&quot;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">MG</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -134,7 +134,7 @@
     <span class="k">return</span> <span class="n">G</span></div>
 
 
-<div class="viewcode-block" id="loadMGraph"><a class="viewcode-back" href="../../doc/graph.html#pttnet.graph.loadMGraph">[docs]</a><span class="k">def</span> <span class="nf">loadMGraph</span><span class="p">(</span><span class="n">edge_condition</span><span class="p">,</span> <span class="n">edge_attrs_to_keep</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">,</span> <span class="s1">&#39;opinion&#39;</span><span class="p">],</span> <span class="n">node_path</span><span class="o">=</span><span class="s2">&quot;all_nodes.pkl&quot;</span><span class="p">,</span> <span class="n">edge_path</span><span class="o">=</span><span class="s2">&quot;all_edges.jsonl&quot;</span><span class="p">):</span>
+<div class="viewcode-block" id="loadMGraph"><a class="viewcode-back" href="../../doc/graph.html#pttnet.graph.loadMGraph">[docs]</a><span class="k">def</span> <span class="nf">loadMGraph</span><span class="p">(</span><span class="n">edge_condition</span><span class="p">,</span> <span class="n">edge_attrs_to_keep</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">,</span> <span class="s1">&#39;opinion&#39;</span><span class="p">],</span> <span class="n">node_path</span><span class="o">=</span><span class="s2">&quot;data/network/nodes&quot;</span><span class="p">,</span> <span class="n">edge_path</span><span class="o">=</span><span class="s2">&quot;all_edges.jsonl&quot;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Generate nx.Graph from PTT comment data</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
