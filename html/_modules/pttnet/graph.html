@@ -36,7 +36,9 @@
 <span class="kn">import</span> <span class="nn">jieba</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">pttnet.utils</span> <span class="kn">import</span> <span class="n">merge_dicts</span>
 
 
 <div class="viewcode-block" id="Graph"><a class="viewcode-back" href="../../doc/graph.html#pttnet.graph.Graph">[docs]</a><span class="k">def</span> <span class="nf">Graph</span><span class="p">(</span><span class="n">count_edges_in</span><span class="p">,</span> <span class="n">edge_condition</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">MG</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edge_attrs_to_keep</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">,</span> <span class="s1">&#39;opinion&#39;</span><span class="p">],</span> <span class="n">node_path</span><span class="o">=</span><span class="s2">&quot;all_nodes.pkl&quot;</span><span class="p">,</span> <span class="n">edge_path</span><span class="o">=</span><span class="s2">&quot;all_edges.jsonl&quot;</span><span class="p">):</span>
@@ -124,9 +126,10 @@
 
         <span class="c1"># use edge weight</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">):</span>
-            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">corpus</span><span class="o">=</span><span class="p">[</span><span class="n">attr</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]])</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">G</span><span class="p">[</span><span class="n">n1</span><span class="p">][</span><span class="n">n2</span><span class="p">][</span><span class="s1">&#39;weight&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">G</span><span class="p">[</span><span class="n">n1</span><span class="p">][</span><span class="n">n2</span><span class="p">][</span><span class="s1">&#39;corpus&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">attr</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">])</span>
     
     <span class="k">return</span> <span class="n">G</span></div>
 
@@ -196,12 +199,21 @@
 
 <div class="viewcode-block" id="Node"><a class="viewcode-back" href="../../doc/Node.html#pttnet.graph.Node">[docs]</a><span class="k">class</span> <span class="nc">Node</span><span class="p">():</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_</span><span class="p">:</span> <span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fromJson</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">id_</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">fromJson</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Need either id_ or fromJson&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">from_disk</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize a node object</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        id_ : str</span>
+<span class="sd">            Node id</span>
+<span class="sd">        from_disk : str, optional</span>
+<span class="sd">            Path to the directory of the node file, </span>
+<span class="sd">            e.g., ``data/network/nodes``</span>
+<span class="sd">            by default None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">if</span> <span class="n">fromJson</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">__fromJson</span><span class="p">(</span><span class="n">fromJson</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">from_disk</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__loadNode</span><span class="p">(</span><span class="n">id_</span><span class="p">,</span> <span class="n">from_disk</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">id_</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">corpus</span> <span class="o">=</span> <span class="p">{}</span>
@@ -225,20 +237,50 @@
         <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="s1">&#39;1&#39;</span> <span class="o">+</span> <span class="n">hash_str</span><span class="p">)</span>
 
 
-    <span class="k">def</span> <span class="nf">__fromJson</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="n">node</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json_str</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">__loadNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_</span><span class="p">,</span> <span class="n">dir_</span><span class="o">=</span><span class="s2">&quot;data/network/nodes&quot;</span><span class="p">):</span>
+        <span class="n">fp_stats</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dir_</span><span class="p">,</span> <span class="n">id_</span> <span class="o">+</span> <span class="s1">&#39;-stats.json&#39;</span><span class="p">)</span>
+        <span class="n">fp_corp</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dir_</span><span class="p">,</span> <span class="n">id_</span> <span class="o">+</span> <span class="s1">&#39;-corp.jsonl&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Load node data</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fp_stats</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">node</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">corpus</span> <span class="o">=</span> <span class="n">node</span><span class="p">[</span><span class="s1">&#39;corpus&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">corpus_stats</span> <span class="o">=</span> <span class="n">node</span><span class="p">[</span><span class="s1">&#39;corpus_stats&#39;</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">vocab</span> <span class="o">=</span> <span class="n">node</span><span class="p">[</span><span class="s1">&#39;vocab&#39;</span><span class="p">]</span>
 
+        <span class="c1"># Load corpus</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fp_corp</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">corpus</span> <span class="o">=</span> <span class="n">merge_dicts</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">f</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__toJson</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span>
-            <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
-            <span class="s2">&quot;corpus&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">corpus</span><span class="p">,</span>
-            <span class="s2">&quot;vocab&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">vocab</span>
-        <span class="p">},</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    
+
+    <span class="k">def</span> <span class="nf">_saveNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dir_</span><span class="o">=</span><span class="s2">&quot;data/network/nodes&quot;</span><span class="p">):</span>
+        <span class="n">fp_stats</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dir_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">+</span> <span class="s1">&#39;-stats.json&#39;</span><span class="p">)</span>
+        <span class="n">fp_corp</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dir_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">+</span> <span class="s1">&#39;-corp.jsonl&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Write new file if node file doesn exist</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">fp_stats</span><span class="p">):</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fp_stats</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">({</span>
+                    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                    <span class="s2">&quot;corpus_stats&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">corpus_stats</span><span class="p">,</span>
+                    <span class="s2">&quot;vocab&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">vocab</span>
+                <span class="p">},</span> <span class="n">f</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fp_corp</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">corpus</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+
+    <span class="k">def</span> <span class="nf">cacheStats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dir_</span><span class="o">=</span><span class="s2">&quot;data/network/nodes/&quot;</span><span class="p">):</span>
+        <span class="n">fp_stats</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dir_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">+</span> <span class="s1">&#39;-stats.json&#39;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fp_stats</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">({</span>
+                <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                <span class="s2">&quot;corpus_stats&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">corpus_stats</span><span class="p">,</span>
+                <span class="s2">&quot;vocab&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">vocab</span>
+            <span class="p">},</span> <span class="n">f</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
 
 <div class="viewcode-block" id="Node.add_comment"><a class="viewcode-back" href="../../doc/Node.html#pttnet.graph.Node.add_comment">[docs]</a>    <span class="k">def</span> <span class="nf">add_comment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">content</span><span class="p">,</span> <span class="n">board</span><span class="p">,</span> <span class="n">type_</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add comment to corpus</span>
@@ -422,9 +464,11 @@
         <span class="k">return</span> <span class="n">stats</span><span class="p">,</span> <span class="n">vocab</span></div></div>
 
 
-<span class="k">def</span> <span class="nf">load_Nodes</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="n">nodes</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">load_Nodes</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">&quot;data/network/nodes&quot;</span><span class="p">):</span>
+    <span class="n">node_ids</span> <span class="o">=</span> <span class="p">{</span> <span class="n">f</span><span class="p">[:</span><span class="o">-</span><span class="mi">11</span><span class="p">]</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="s2">&quot;data/network/nodes&quot;</span><span class="p">)</span> <span class="p">}</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">id_</span><span class="p">:</span> <span class="n">Node</span><span class="p">(</span><span class="n">id_</span><span class="p">,</span> <span class="n">from_disk</span><span class="o">=</span><span class="n">path</span><span class="p">)</span> <span class="k">for</span> <span class="n">id_</span> <span class="ow">in</span> <span class="n">node_ids</span>
+    <span class="p">}</span>
     <span class="k">return</span> <span class="n">nodes</span>
 
 
