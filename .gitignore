@@ -12,3 +12,4 @@ all_nodes.pkl
 __pycache__
 
 docs
+data/network/*.pkl
