@@ -13,6 +13,7 @@ __pycache__
 
 docs
 
+data
 data/corpus
 data/network/*.pkl
 
