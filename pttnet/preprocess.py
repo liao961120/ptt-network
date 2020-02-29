@@ -20,11 +20,12 @@ def load_comments_data_from_corpus(boards=["Gossiping"], years=[2009]):
 
                     posts.append({
                         'title': data['post_title'],
-                        'id': data['post_id'],
+                        'id': post_name,
                         'board': board,
                         'date': datetime.fromtimestamp(int(data['post_time'])).strftime("%Y-%m-%d"),
                         'author': data['post_author'],
-                        'comments': data["comments"]
+                        'comments': data["comments"],
+                        'content': data["post_body"],
                     })
 
     return posts

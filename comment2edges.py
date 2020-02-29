@@ -17,6 +17,11 @@ start0 = time()  # Time execution
 BOARD = sys.argv[1]
 YEARS = [y for y in sys.argv[2].split(',')]
 
+# Clean up
+for year in YEARS:
+    OUT_FILE = f'data/network/{BOARD}_{year}_edges.jsonl'
+    if os.path.exists(OUT_FILE): os.remove(OUT_FILE)
+
 # Check command line arguments
 if BOARD not in os.listdir("data/corpus/"): 
     raise Exception(f"{BOARD} doesn't exist!" )
@@ -34,11 +39,14 @@ start = time()  # Time execution
 
 # Construct network data from post comments
 cmt_count = 0
-for post in posts:
+for i, post in enumerate(posts):
 
     # Determine outfile from post year
     year = post['date'][:4]
     OUT_FILE = f'data/network/{BOARD}_{year}_edges.jsonl'
+
+    # Collapse comments to a single string
+    comments = '\u3000'.join(c['content'] for c in post['comments'])
 
     with open(OUT_FILE, "a") as f:
 
@@ -53,8 +61,8 @@ for post in posts:
                 'attr': {
                     'date': post['date'],
                     'board': post['board'],
-                    'connected_by': post['id'],
-                    'opinion': f"{cmt1['type']}-{cmt2['type']}"
+                    'opinion': f"{cmt1['type']}-{cmt2['type']}",
+                    'text': post['id'],
                 }
             }
 
@@ -66,5 +74,5 @@ for post in posts:
     if i % int(post_num/20) == 0: logging.info(f"Progressed: {i/post_num:.2%}")
 
 
-logging.info(f"Processed {cmt_count} comments ({post_count} posts) in {(time() - start)/60:.2} mins")
+logging.info(f"Processed {cmt_count} comments ({post_num} posts) in {(time() - start)/60:.2} mins")
 logging.info(f"Finished in {(time() - start0)/60:.2} mins")

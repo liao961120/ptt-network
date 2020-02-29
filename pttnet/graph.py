@@ -91,9 +91,10 @@ def Graph(count_edges_in, edge_condition=None, MG=None, edge_attrs_to_keep=['dat
 
         # use edge weight
         if not G.has_edge(n1, n2):
-            G.add_edge(n1, n2, weight=1)
+            G.add_edge(n1, n2, weight=1, corpus=[attr['text']])
         else:
             G[n1][n2]['weight'] += 1
+            G[n1][n2]['corpus'].append(attr['text'])
     
     return G
 
