@@ -47,19 +47,8 @@
 <tr class="row-odd"><td><p><a class="reference internal" href="#pttnet.graph.Node.add_comment" title="pttnet.graph.Node.add_comment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_comment</span></code></a>(self, date, content, board, type_)</p></td>
 <td><p>Add comment to corpus</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#pttnet.graph.Node.getVocab" title="pttnet.graph.Node.getVocab"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getVocab</span></code></a>(self[, start, end, boards, force])</p></td>
-<td><p>Get vocabulary in specific time range and boards</p></td>
-</tr>
-</tbody>
-</table>
-<table class="docutils align-default">
-<colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
-</colgroup>
-<tbody>
-<tr class="row-odd"><td><p><strong>toJson</strong></p></td>
-<td></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#pttnet.graph.Node.getCorpusStats" title="pttnet.graph.Node.getCorpusStats"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getCorpusStats</span></code></a>(self[, start, end, boards, force])</p></td>
+<td><p>Get corpus stats and vocabulary in specific time range and boards</p></td>
 </tr>
 </tbody>
 </table>
@@ -70,7 +59,7 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>date</strong><span class="classifier">str</span></dt><dd><p>Date in yyyy-mm-dd format</p>
+<dt><strong>date</strong><span class="classifier">str</span></dt><dd><p>Date in <code class="docutils literal notranslate"><span class="pre">yyyy-mm-dd</span></code> format</p>
 </dd>
 <dt><strong>content</strong><span class="classifier">str</span></dt><dd><p>Segmented comment string, with space separating each
 word.</p>
@@ -87,8 +76,9 @@ word.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
   <span class="s1">&#39;2019-01-20&#39;</span><span class="p">:</span> <span class="p">[</span>
     <span class="p">{</span>   
-      <span class="nb">type</span><span class="p">:</span> <span class="s2">&quot;pos&quot;</span><span class="p">,</span>
-      <span class="n">content</span><span class="p">:</span> <span class="s2">&quot;segmented string&quot;</span>
+      <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s2">&quot;pos&quot;</span><span class="p">,</span>
+      <span class="s1">&#39;board&#39;</span><span class="p">:</span> <span class="s2">&quot;Boy-Girl&quot;</span><span class="p">,</span>
+      <span class="s1">&#39;content&#39;</span><span class="p">:</span> <span class="s2">&quot;segmented string&quot;</span>
     <span class="p">},</span>
     <span class="p">{</span><span class="o">...</span><span class="p">}</span>
   <span class="p">],</span>
@@ -100,9 +90,9 @@ word.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pttnet.graph.Node.getVocab">
-<code class="sig-name descname">getVocab</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">start='1900-01-01'</em>, <em class="sig-param">end='2050-12-31'</em>, <em class="sig-param">boards=None</em>, <em class="sig-param">force=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pttnet/graph.html#Node.getVocab"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pttnet.graph.Node.getVocab" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get vocabulary in specific time range and boards</p>
+<dt id="pttnet.graph.Node.getCorpusStats">
+<code class="sig-name descname">getCorpusStats</code><span class="sig-paren">(</span><em class="sig-param">self</em>, <em class="sig-param">start='1900-01-01'</em>, <em class="sig-param">end='2050-12-31'</em>, <em class="sig-param">boards=None</em>, <em class="sig-param">force=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pttnet/graph.html#Node.getCorpusStats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pttnet.graph.Node.getCorpusStats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get corpus stats and vocabulary in specific time range and boards</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
@@ -118,16 +108,42 @@ word.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>list</dt><dd><p>A list of words.</p>
+<dt>dict</dt><dd><p>Key-value pairs of statistics and their values in the corpus.</p>
+</dd>
+<dt>dict</dt><dd><p>Key-value pairs of words with their counts in the corpus.</p>
 </dd>
 </dl>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>Vocabulary Structure</p>
+<p>Corpus stats structure</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-  <span class="s1">&#39;1900-01-01_2050-12-31&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="s1">&#39;word1&#39;</span><span class="p">,</span> <span class="s1">&#39;word2&#39;</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
-  <span class="s1">&#39;1900-01-01_2050-12-31_Gossiping-Boy-girl&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="s1">&#39;word1&#39;</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+  <span class="s1">&#39;count-all&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+  <span class="s1">&#39;count-pos&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+  <span class="s1">&#39;count-neg&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+  <span class="s1">&#39;count-neu&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+  <span class="s1">&#39;chars-all&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+  <span class="s1">&#39;tokens-all&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+  <span class="s1">&#39;chars-pos&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+  <span class="s1">&#39;tokens-pos&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+  <span class="s1">&#39;chars-neg&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+  <span class="s1">&#39;tokens-neg&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+  <span class="s1">&#39;chars-neu&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+  <span class="s1">&#39;tokens-neu&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Vocabulary structure</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="s1">&#39;1900-01-01_2050-12-31&#39;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="s1">&#39;word1&#39;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span> 
+      <span class="s1">&#39;word2&#39;</span><span class="p">:</span><span class="mi">1030</span><span class="p">,</span> 
+      <span class="o">...</span>
+   <span class="p">},</span>
+  <span class="s1">&#39;1900-01-01_2050-12-31_Gossiping-Boy-girl&#39;</span> <span class="p">:</span> <span class="p">{</span>
+      <span class="s1">&#39;word1&#39;</span><span class="p">:</span><span class="mi">500</span><span class="p">,</span> 
+      <span class="o">...</span>
+  <span class="p">},</span>
   <span class="o">...</span>
 <span class="p">}</span>
 </pre></div>

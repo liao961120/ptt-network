@@ -205,6 +205,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">id_</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">corpus</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">corpus_stats</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">vocab</span> <span class="o">=</span> <span class="p">{}</span>
 
 
@@ -231,7 +232,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">vocab</span> <span class="o">=</span> <span class="n">node</span><span class="p">[</span><span class="s1">&#39;vocab&#39;</span><span class="p">]</span>
 
 
-    <span class="k">def</span> <span class="nf">toJson</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__toJson</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span>
             <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
             <span class="s2">&quot;corpus&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">corpus</span><span class="p">,</span>
@@ -245,7 +246,7 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        date : str</span>
-<span class="sd">            Date in yyyy-mm-dd format</span>
+<span class="sd">            Date in ``yyyy-mm-dd`` format</span>
 <span class="sd">        content : str</span>
 <span class="sd">            Segmented comment string, with space separating each</span>
 <span class="sd">            word.</span>
@@ -263,8 +264,9 @@
 <span class="sd">            {</span>
 <span class="sd">              &#39;2019-01-20&#39;: [</span>
 <span class="sd">                {   </span>
-<span class="sd">                  type: &quot;pos&quot;,</span>
-<span class="sd">                  content: &quot;segmented string&quot;</span>
+<span class="sd">                  &#39;type&#39;: &quot;pos&quot;,</span>
+<span class="sd">                  &#39;board&#39;: &quot;Boy-Girl&quot;,</span>
+<span class="sd">                  &#39;content&#39;: &quot;segmented string&quot;</span>
 <span class="sd">                },</span>
 <span class="sd">                {...}</span>
 <span class="sd">              ],</span>
@@ -283,8 +285,8 @@
         <span class="p">})</span></div>
 
 
-<div class="viewcode-block" id="Node.getVocab"><a class="viewcode-back" href="../../doc/Node.html#pttnet.graph.Node.getVocab">[docs]</a>    <span class="k">def</span> <span class="nf">getVocab</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="s2">&quot;1900-01-01&quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;2050-12-31&quot;</span><span class="p">,</span> <span class="n">boards</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get vocabulary in specific time range and boards</span>
+<div class="viewcode-block" id="Node.getCorpusStats"><a class="viewcode-back" href="../../doc/Node.html#pttnet.graph.Node.getCorpusStats">[docs]</a>    <span class="k">def</span> <span class="nf">getCorpusStats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="s2">&quot;1900-01-01&quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;2050-12-31&quot;</span><span class="p">,</span> <span class="n">boards</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get corpus stats and vocabulary in specific time range and boards</span>
 <span class="sd">        </span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -299,49 +301,125 @@
 <span class="sd">        </span>
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        list</span>
-<span class="sd">            A list of words.</span>
+<span class="sd">        dict</span>
+<span class="sd">            Key-value pairs of statistics and their values in the corpus.</span>
+<span class="sd">        dict</span>
+<span class="sd">            Key-value pairs of words with their counts in the corpus.</span>
 
 <span class="sd">        Notes</span>
-<span class="sd">        --------------------</span>
-<span class="sd">        Vocabulary Structure</span>
+<span class="sd">        -----</span>
+<span class="sd">        Corpus stats structure</span>
 
 <span class="sd">        .. code-block:: python</span>
 <span class="sd">        </span>
 <span class="sd">            {</span>
-<span class="sd">              &#39;1900-01-01_2050-12-31&#39; : [&#39;word1&#39;, &#39;word2&#39;, ...],</span>
-<span class="sd">              &#39;1900-01-01_2050-12-31_Gossiping-Boy-girl&#39; : [&#39;word1&#39;, ...],</span>
+<span class="sd">              &#39;count-all&#39;: 0,</span>
+<span class="sd">              &#39;count-pos&#39;: 0,</span>
+<span class="sd">              &#39;count-neg&#39;: 0,</span>
+<span class="sd">              &#39;count-neu&#39;: 0,</span>
+<span class="sd">              &#39;chars-all&#39;: 0,</span>
+<span class="sd">              &#39;tokens-all&#39;: 0,</span>
+<span class="sd">              &#39;chars-pos&#39;: 0,</span>
+<span class="sd">              &#39;tokens-pos&#39;: 0,</span>
+<span class="sd">              &#39;chars-neg&#39;: 0,</span>
+<span class="sd">              &#39;tokens-neg&#39;: 0,</span>
+<span class="sd">              &#39;chars-neu&#39;: 0,</span>
+<span class="sd">              &#39;tokens-neu&#39;: 0,</span>
+<span class="sd">            }</span>
+
+<span class="sd">        Vocabulary structure</span>
+
+<span class="sd">        .. code-block:: python</span>
+<span class="sd">        </span>
+<span class="sd">            {</span>
+<span class="sd">              &#39;1900-01-01_2050-12-31&#39; : {</span>
+<span class="sd">                  &#39;word1&#39;: 1000, </span>
+<span class="sd">                  &#39;word2&#39;:1030, </span>
+<span class="sd">                  ...</span>
+<span class="sd">               },</span>
+<span class="sd">              &#39;1900-01-01_2050-12-31_Gossiping-Boy-girl&#39; : {</span>
+<span class="sd">                  &#39;word1&#39;:500, </span>
+<span class="sd">                  ...</span>
+<span class="sd">              },</span>
 <span class="sd">              ...</span>
 <span class="sd">            }</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">if</span> <span class="n">board</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{start}</span><span class="s2">_</span><span class="si">{end}</span><span class="s2">_{&#39;-&#39;.join(b for b in boards)}&quot;</span>
+        <span class="k">if</span> <span class="n">boards</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{start}</span><span class="s2">_</span><span class="si">{end}</span><span class="s2">_{&#39;-&#39;.join(b for b in boards)}&quot;</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">query</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{start}</span><span class="s2">_</span><span class="si">{end}</span><span class="s2">&quot;</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{start}</span><span class="s2">_</span><span class="si">{end}</span><span class="s2">&quot;</span>
+        
+        <span class="c1"># Return cache</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">force</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">corpus_stats</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">corpus_stats</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">vocab</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
 
-        <span class="k">if</span> <span class="n">force</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">vocab</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">query</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Corpus stats structure</span>
+        <span class="n">stats</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;count-all&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;count-pos&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;count-neg&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;count-neu&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;chars-all&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;tokens-all&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;chars-pos&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;tokens-pos&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;chars-neg&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;tokens-neg&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;chars-neu&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;tokens-neu&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="p">}</span>
 
+        <span class="c1"># Compute corpus stats</span>
+        <span class="n">tokens</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">day</span><span class="p">,</span> <span class="n">corp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">corpus</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            
+            <span class="c1"># Check date</span>
             <span class="n">start_d</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
             <span class="n">end_d</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">end</span><span class="p">)</span>
+            <span class="n">day</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">day</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">start_d</span> <span class="o">&lt;=</span> <span class="n">day</span> <span class="ow">and</span> <span class="n">day</span> <span class="o">&lt;=</span> <span class="n">end_d</span><span class="p">:</span> <span class="k">continue</span>
 
-            <span class="n">raw_content</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">cmts</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">corpus</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">cmt</span> <span class="ow">in</span> <span class="n">corp</span><span class="p">:</span>
+                <span class="c1"># Check boards</span>
+                <span class="k">if</span> <span class="n">boards</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">cmt</span><span class="p">[</span><span class="s1">&#39;board&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">boards</span><span class="p">:</span> 
+                        <span class="c1"># Update stats</span>
+                        <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;count-&#39;</span> <span class="o">+</span> <span class="n">cmt</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;chars-&#39;</span> <span class="o">+</span> <span class="n">cmt</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]]</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmt</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()))</span>
+                        <span class="n">tks</span> <span class="o">=</span> <span class="n">cmt</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\u3000</span><span class="s1">&#39;</span><span class="p">)</span>
+                        <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;tokens-&#39;</span> <span class="o">+</span> <span class="n">cmt</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]]</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tks</span><span class="p">)</span>
+                        <span class="n">tokens</span> <span class="o">+=</span> <span class="n">tks</span>
                 
-                <span class="c1"># Get all comments of specific date</span>
-                <span class="n">dt</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">start_d</span> <span class="o">&lt;=</span> <span class="n">dt</span> <span class="ow">and</span> <span class="n">dt</span> <span class="o">&lt;=</span> <span class="n">end_d</span><span class="p">:</span>
-                    
-                    <span class="c1"># Get all comments of matching boards</span>
-                    <span class="k">if</span> <span class="n">board</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                        <span class="n">raw_content</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\u3000</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cmts</span> <span class="k">if</span> <span class="n">c</span><span class="p">[</span><span class="s1">&#39;board&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">boards</span><span class="p">)</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">raw_content</span> <span class="o">+=</span> <span class="s1">&#39;</span><span class="se">\u3000</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cmts</span><span class="p">)</span>
-
-            <span class="c1"># Renew vocabulary</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">vocab</span><span class="p">[</span><span class="n">query</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">raw_content</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\u3000</span><span class="s1">&#39;</span><span class="p">)))</span>
+                <span class="c1"># Without boards</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Update stats</span>
+                    <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;count-&#39;</span> <span class="o">+</span> <span class="n">cmt</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
+                    <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;chars-&#39;</span> <span class="o">+</span> <span class="n">cmt</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]]</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmt</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()))</span>
+                    <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;tokens-&#39;</span> <span class="o">+</span> <span class="n">cmt</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]]</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">cmt</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\u3000</span><span class="s1">&#39;</span><span class="p">))</span>
+                    <span class="n">tks</span> <span class="o">=</span> <span class="n">cmt</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\u3000</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;tokens-&#39;</span> <span class="o">+</span> <span class="n">cmt</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]]</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tks</span><span class="p">)</span>
+                    <span class="n">tokens</span> <span class="o">+=</span> <span class="n">tks</span>
         
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">vocab</span><span class="p">[</span><span class="n">query</span><span class="p">]</span></div></div>
+        <span class="c1"># Get *-all stats</span>
+        <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;count-all&#39;</span><span class="p">]</span>  <span class="o">=</span>  <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;count-pos&#39;</span><span class="p">]</span> <span class="o">+</span>  <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;count-neg&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;count-neu&#39;</span><span class="p">]</span> 
+        <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;chars-all&#39;</span><span class="p">]</span>  <span class="o">=</span>  <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;chars-pos&#39;</span><span class="p">]</span> <span class="o">+</span>  <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;chars-neg&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;chars-neu&#39;</span><span class="p">]</span> 
+        <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;tokens-all&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;tokens-pos&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;tokens-neg&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;tokens-neu&#39;</span><span class="p">]</span> 
+
+        <span class="c1"># Get all vocabulary</span>
+        <span class="n">vocab</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">tk</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">:</span>
+            <span class="n">tk</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">tk</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">vocab</span><span class="p">:</span>
+                <span class="n">vocab</span><span class="p">[</span><span class="n">tk</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">vocab</span><span class="p">[</span><span class="n">tk</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        
+        <span class="c1"># Cache computed results</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vocab</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">vocab</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">corpus_stats</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats</span>
+
+        <span class="k">return</span> <span class="n">stats</span><span class="p">,</span> <span class="n">vocab</span></div></div>
 
 
 <span class="k">def</span> <span class="nf">load_Nodes</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
