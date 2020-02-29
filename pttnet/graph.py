@@ -8,7 +8,7 @@ import networkx as nx
 from pttnet.utils import merge_dicts
 
 
-def Graph(count_edges_in, edge_condition=None, MG=None, edge_attrs_to_keep=['date', 'opinion'], node_path="all_nodes.pkl", edge_path="all_edges.jsonl"):
+def Graph(count_edges_in, edge_condition=None, MG=None, edge_attrs_to_keep=['date', 'opinion'], node_path="data/network/nodes", edge_path="all_edges.jsonl"):
     """Generate nx.Graph from PTT comment data
     
     Parameters
@@ -42,7 +42,7 @@ def Graph(count_edges_in, edge_condition=None, MG=None, edge_attrs_to_keep=['dat
         Edge attributes to keep when reading file from disk, by default ['date', 'opinion']. 
         Data passed to :py:func:`.loadMGraph`.
     node_path : str, optional
-        File path to node file, by default "all_nodes.pkl". 
+        Path to the directory of node files, by default "data/network/nodes". 
         Data passed to :py:func:`.loadMGraph`.
     edge_path : str, optional
         File path to edge file, by default "all_edges.jsonl". 
@@ -65,7 +65,7 @@ def Graph(count_edges_in, edge_condition=None, MG=None, edge_attrs_to_keep=['dat
     ...         ), 
     ...     'opinion': set(['pos-pos', 'pos-neg', 'pos-neu', 'neg-pos', 'neg-neg', 'neg-neu'])
     ... }
-    >>> MG = loadMGraph(edge_condition=conditions, node_path="data/all_nodes.pkl", edge_path="data/all_edges.jsonl")
+    >>> MG = loadMGraph(edge_condition=conditions, node_path="data/network/nodes", edge_path="data/all_edges.jsonl")
     >>> 
     >>> criteria = {
     ... 'opinion': ['pos-pos', 'neg-neg'],
@@ -74,7 +74,7 @@ def Graph(count_edges_in, edge_condition=None, MG=None, edge_attrs_to_keep=['dat
 
     Alternatively, directly create a ``networkx.Graph`` from reading disk file:
 
-    >>> G = Graph(edge_condition=conditions, count_edges_in=criteria, node_path="data/all_nodes.pkl", edge_path="data/all_edges.jsonl")
+    >>> G = Graph(edge_condition=conditions, count_edges_in=criteria, node_path="data/network/nodes", edge_path="data/all_edges.jsonl")
     """
 
     if MG is None:
@@ -101,7 +101,7 @@ def Graph(count_edges_in, edge_condition=None, MG=None, edge_attrs_to_keep=['dat
     return G
 
 
-def loadMGraph(edge_condition, edge_attrs_to_keep=['date', 'opinion'], node_path="all_nodes.pkl", edge_path="all_edges.jsonl"):
+def loadMGraph(edge_condition, edge_attrs_to_keep=['date', 'opinion'], node_path="data/network/nodes", edge_path="all_edges.jsonl"):
     """Generate nx.Graph from PTT comment data
     
     Parameters
@@ -121,7 +121,6 @@ def loadMGraph(edge_condition, edge_attrs_to_keep=['date', 'opinion'], node_path
         Undirected graph allowing multiple edges between 
         any pair of nodes.
     """
-
 
     # Load nodes
     nodes = load_Nodes(node_path)
