@@ -1,7 +1,7 @@
 test*.py
 *.log
 
-data/corpus
+
 wiki.zh.vector
 wiki_zh-vec.npy
 wiki_zh-vocab.pkl
@@ -12,4 +12,8 @@ all_nodes.pkl
 __pycache__
 
 docs
+
+data/corpus
 data/network/*.pkl
+
+paper
