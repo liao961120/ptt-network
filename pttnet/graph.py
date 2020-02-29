@@ -172,6 +172,7 @@ class Node():
         else:
             self.id = id_
             self.corpus = {}
+            self.corpus_stats = {}
             self.vocab = {}
 
 
@@ -198,7 +199,7 @@ class Node():
         self.vocab = node['vocab']
 
 
-    def toJson(self):
+    def __toJson(self):
         return json.dumps({
             "id": self.id,
             "corpus": self.corpus,
@@ -212,7 +213,7 @@ class Node():
         Parameters
         ----------
         date : str
-            Date in yyyy-mm-dd format
+            Date in ``yyyy-mm-dd`` format
         content : str
             Segmented comment string, with space separating each
             word.
@@ -230,8 +231,9 @@ class Node():
             {
               '2019-01-20': [
                 {   
-                  type: "pos",
-                  content: "segmented string"
+                  'type': "pos",
+                  'board': "Boy-Girl",
+                  'content': "segmented string"
                 },
                 {...}
               ],
@@ -250,8 +252,8 @@ class Node():
         })
 
 
-    def getVocab(self, start="1900-01-01", end="2050-12-31", boards=None, force=False):
-        """Get vocabulary in specific time range and boards
+    def getCorpusStats(self, start="1900-01-01", end="2050-12-31", boards=None, force=False):
+        """Get corpus stats and vocabulary in specific time range and boards
         
         Parameters
         ----------
@@ -266,49 +268,125 @@ class Node():
         
         Returns
         -------
-        list
-            A list of words.
+        dict
+            Key-value pairs of statistics and their values in the corpus.
+        dict
+            Key-value pairs of words with their counts in the corpus.
 
         Notes
-        --------------------
-        Vocabulary Structure
+        -----
+        Corpus stats structure
 
         .. code-block:: python
         
             {
-              '1900-01-01_2050-12-31' : ['word1', 'word2', ...],
-              '1900-01-01_2050-12-31_Gossiping-Boy-girl' : ['word1', ...],
+              'count-all': 0,
+              'count-pos': 0,
+              'count-neg': 0,
+              'count-neu': 0,
+              'chars-all': 0,
+              'tokens-all': 0,
+              'chars-pos': 0,
+              'tokens-pos': 0,
+              'chars-neg': 0,
+              'tokens-neg': 0,
+              'chars-neu': 0,
+              'tokens-neu': 0,
+            }
+
+        Vocabulary structure
+
+        .. code-block:: python
+        
+            {
+              '1900-01-01_2050-12-31' : {
+                  'word1': 1000, 
+                  'word2':1030, 
+                  ...
+               },
+              '1900-01-01_2050-12-31_Gossiping-Boy-girl' : {
+                  'word1':500, 
+                  ...
+              },
               ...
             }
         """
 
-        if board is not None:
-            query = f"{start}_{end}_{'-'.join(b for b in boards)}"
+        if boards is not None:
+            key = f"{start}_{end}_{'-'.join(b for b in boards)}"
         else:
-            query = f"{start}_{end}"
+            key = f"{start}_{end}"
+        
+        # Return cache
+        if not force and self.corpus_stats.get(key) is not None:
+            return self.corpus_stats[key], self.vocab[key]
 
-        if force or self.vocab.get(query) is None:
+        # Corpus stats structure
+        stats = {
+            'count-all': 0,
+            'count-pos': 0,
+            'count-neg': 0,
+            'count-neu': 0,
+            'chars-all': 0,
+            'tokens-all': 0,
+            'chars-pos': 0,
+            'tokens-pos': 0,
+            'chars-neg': 0,
+            'tokens-neg': 0,
+            'chars-neu': 0,
+            'tokens-neu': 0,
+        }
 
+        # Compute corpus stats
+        tokens = []
+        for day, corp in self.corpus.items():
+            
+            # Check date
             start_d = datetime.date.fromisoformat(start)
             end_d = datetime.date.fromisoformat(end)
+            day = datetime.date.fromisoformat(day)
+            if not start_d <= day and day <= end_d: continue
 
-            raw_content = ''
-            for k, cmts in self.corpus.items():
+            for cmt in corp:
+                # Check boards
+                if boards is not None:
+                    if cmt['board'] in boards: 
+                        # Update stats
+                        stats['count-' + cmt['type']] += 1
+                        stats['chars-' + cmt['type']] += len(''.join(cmt['content'].split()))
+                        tks = cmt['content'].split('\u3000')
+                        stats['tokens-' + cmt['type']] += len(tks)
+                        tokens += tks
                 
-                # Get all comments of specific date
-                dt = datetime.date.fromisoformat(k)
-                if start_d <= dt and dt <= end_d:
-                    
-                    # Get all comments of matching boards
-                    if board is not None:
-                        raw_content += '\u3000'.join(c['content'] for c in cmts if c['board'] in boards)
-                    else:
-                        raw_content += '\u3000'.join(c['content'] for c in cmts)
-
-            # Renew vocabulary
-            self.vocab[query] = list(set(raw_content.split('\u3000')))
+                # Without boards
+                else:
+                    # Update stats
+                    stats['count-' + cmt['type']] += 1
+                    stats['chars-' + cmt['type']] += len(''.join(cmt['content'].split()))
+                    stats['tokens-' + cmt['type']] += len(cmt['content'].split('\u3000'))
+                    tks = cmt['content'].split('\u3000')
+                    stats['tokens-' + cmt['type']] += len(tks)
+                    tokens += tks
         
-        return self.vocab[query]
+        # Get *-all stats
+        stats['count-all']  =  stats['count-pos'] +  stats['count-neg'] + stats['count-neu'] 
+        stats['chars-all']  =  stats['chars-pos'] +  stats['chars-neg'] + stats['chars-neu'] 
+        stats['tokens-all'] = stats['tokens-pos'] + stats['tokens-neg'] + stats['tokens-neu'] 
+
+        # Get all vocabulary
+        vocab = {}
+        for tk in tokens:
+            tk = tk.strip()
+            if tk not in vocab:
+                vocab[tk] = 1
+            else:
+                vocab[tk] += 1
+        
+        # Cache computed results
+        self.vocab[key] = vocab
+        self.corpus_stats[key] = stats
+
+        return stats, vocab
 
 
 def load_Nodes(path):
