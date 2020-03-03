@@ -3,6 +3,10 @@ import setuptools
 #with open("README.md", "r") as fh:
 #    long_description = fh.read()
 
+packages = [
+    "pttnet",
+]
+
 setuptools.setup(
     name="pttnet", # Replace with your own username
     version="0.0.1",
@@ -12,7 +16,7 @@ setuptools.setup(
     long_description="PTT Comments as Social Network Data",
     long_description_content_type="text/markdown",
     url="https://github.com/liao961120/ptt-network",
-    packages=setuptools.find_packages(),
+    packages=packages,
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
@@ -20,3 +24,7 @@ setuptools.setup(
     ],
     python_requires='>=3.7',
 )
+
+#%%
+import setuptools
+setuptools.find_packages()

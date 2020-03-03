@@ -1,6 +1,6 @@
 import os
 import json
-import jieba
+import re
 from datetime import datetime
 
 def load_comments_data_from_corpus(boards=["Gossiping"], years=[2009]):
@@ -9,17 +9,19 @@ def load_comments_data_from_corpus(boards=["Gossiping"], years=[2009]):
 
     for board in boards:
         for year in years:
-            fp = f"data/corpus/{board}/{year}/"
+            fp = f"data/corpus/segmented/{board}/{year}/"
 
             for post_name in os.listdir(fp):
                 post_path = fp + post_name
 
                 with open(post_path) as f:
                     data = json.load(f)
-
+                    title = titleProcess(data['post_title'])
 
                     posts.append({
-                        'title': data['post_title'],
+                        'title': title['title'],
+                        'isRe': title['isRe'],
+                        'tag': title['tag'],
                         'id': post_name,
                         'board': board,
                         'date': datetime.fromtimestamp(int(data['post_time'])).strftime("%Y-%m-%d"),
@@ -29,6 +31,19 @@ def load_comments_data_from_corpus(boards=["Gossiping"], years=[2009]):
                     })
 
     return posts
+
+
+def titleProcess(title: str):
+    m = re.match('(^Re: ?)?(\[(.+)\] ?)?(.*)', title)
+    try:
+        out = {
+            'title': m[4],
+            'isRe': 0 if m[1] is None else 1,
+            'tag': m[3]
+        }
+    except:
+        raise Exception("RegEx parse error")
+    return out
 
 
 def segment(str):

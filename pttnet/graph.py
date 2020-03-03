@@ -1,14 +1,14 @@
 #%%
 import datetime
-import jieba
 import json
 import pickle
 import os
+import itertools
 import networkx as nx
 from pttnet.utils import merge_dicts
 
 
-def Graph(count_edges_in, edge_condition=None, MG=None, edge_attrs_to_keep=['date', 'opinion'], node_path="data/network/nodes", edge_path="all_edges.jsonl"):
+def Graph(count_edges_in, edge_condition=None, MG=None, years=[], boards=[], node_path="data/network/nodes", edge_path="data/network/edges"):
     """Generate nx.Graph from PTT comment data
     
     Parameters
@@ -36,17 +36,14 @@ def Graph(count_edges_in, edge_condition=None, MG=None, edge_attrs_to_keep=['dat
         ``{}`` to collapse all the same edges in the MultiGraph (regardless of criteria).
     MG : nx.MultiGraph, optional
         nx.MultiGraph to start from. If specified, will use the MultiGraph (created from
-        :py:func:`.loadMGraph`) from memory instead of reading the node and edge files
+        :py:func:`.MutiGraph`) from memory instead of reading the node and edge files
         from disk (ignoring ``node_path`` and ``edge_path``). By default None.
-    edge_attrs_to_keep : list, optional
-        Edge attributes to keep when reading file from disk, by default ['date', 'opinion']. 
-        Data passed to :py:func:`.loadMGraph`.
     node_path : str, optional
         Path to the directory of node files, by default "data/network/nodes". 
-        Data passed to :py:func:`.loadMGraph`.
+        Data passed to :py:func:`.MutiGraph`.
     edge_path : str, optional
-        File path to edge file, by default "all_edges.jsonl". 
-        Data passed to :py:func:`.loadMGraph`.
+        Path to the directory of edge files, by default "data/network/edges". 
+        Data passed to :py:func:`.MutiGraph`.
     
     Returns
     -------
@@ -59,26 +56,27 @@ def Graph(count_edges_in, edge_condition=None, MG=None, edge_attrs_to_keep=['dat
     then reduce it to a ``networkx.Graph`` with :py:func:`.Graph`
 
     >>> conditions = {
+    ...     #'nodes': ['node_id1', 'node_id2', 'node_id3', ...]
     ...     'date': set(
     ...             (datetime.date(2010,1,1) + datetime.timedelta(days=x)).isoformat() 
     ...             for x in range(30)  # get 30 days comments starting from 2010-01-01
     ...         ), 
     ...     'opinion': set(['pos-pos', 'pos-neg', 'pos-neu', 'neg-pos', 'neg-neg', 'neg-neu'])
     ... }
-    >>> MG = loadMGraph(edge_condition=conditions, node_path="data/network/nodes", edge_path="data/all_edges.jsonl")
+    >>> MG = MultiGraph(edge_condition=conditions, boards=['Boy-Girl'] ,years=[2007, 2008, 2009])
     >>> 
     >>> criteria = {
-    ... 'opinion': ['pos-pos', 'neg-neg'],
+    ...     'opinion': ['pos-pos', 'neg-neg'],
     ... }
     >>> G = Graph(count_edges_in=criteria, MG=MG)  # Further reduce graph
 
     Alternatively, directly create a ``networkx.Graph`` from reading disk file:
 
-    >>> G = Graph(edge_condition=conditions, count_edges_in=criteria, node_path="data/network/nodes", edge_path="data/all_edges.jsonl")
+    >>> G = Graph(edge_condition=conditions, count_edges_in=criteria)
     """
 
     if MG is None:
-        MG = loadMGraph(edge_condition, edge_attrs_to_keep, node_path, edge_path)
+        MG = MultiGraph(edge_condition, years, boards, node_path, edge_path)
 
     G = nx.Graph()
     for n1, n2, attr in MG.edges(data=True, keys=False):
@@ -93,23 +91,21 @@ def Graph(count_edges_in, edge_condition=None, MG=None, edge_attrs_to_keep=['dat
 
         # use edge weight
         if not G.has_edge(n1, n2):
-            G.add_edge(n1, n2, weight=1, corpus=[attr['text']])
+            G.add_edge(n1, n2, weight=1, corpus=[attr])
         else:
             G[n1][n2]['weight'] += 1
-            G[n1][n2]['corpus'].append(attr['text'])
+            G[n1][n2]['corpus'].append(attr)
     
     return G
 
 
-def loadMGraph(edge_condition, edge_attrs_to_keep=['date', 'opinion'], node_path="data/network/nodes", edge_path="all_edges.jsonl"):
+def MultiGraph(edge_condition, years=[y + 2006 for y in range(7)], boards=['Boy-Girl'], node_path="data/network/nodes", edge_path='data/network/edges'):
     """Generate nx.Graph from PTT comment data
     
     Parameters
     ----------
     edge_condition : dict
         See ``edge_condition`` in :py:func:`.Graph`.
-    edge_attrs_to_keep : list, optional
-        [description], by default ['date', 'opinion']
     node_path : str, optional
         [description], by default "all_nodes.pkl"
     edge_path : str, optional
@@ -122,42 +118,47 @@ def loadMGraph(edge_condition, edge_attrs_to_keep=['date', 'opinion'], node_path
         any pair of nodes.
     """
 
-    # Load nodes
-    nodes = load_Nodes(node_path)
-    node_ids = nodes.keys()
-
+    # Get edge files' paths
+    fps = []
+    for board, year in [(b, str(y)) for b in boards for y in years]:
+        fp = os.path.join(edge_path, f"{board}_{year}_edges.jsonl")
+        if not os.path.exists(fp):
+            raise Exception(f"Edge file `{fp}` doesn't exist!")
+        fps.append(fp)
+    
     # Create nx.Graph
     G = nx.MultiGraph()
 
-    # Loop over edges in file
-    with open(edge_path) as f:
+    nodes = {}
+    for fp in fps:
+        # Loop over edges in a file
+        with open(fp) as f:
 
-        for line in f:
-            data = json.loads(line)
-            edge = data['edge']
-            attr = data['attr']
+            for line in f:
+                ed = json.loads(line)
 
-            skip = False
-            # Check nodes present
-            for node in edge:
-                if node not in node_ids:
-                    skip = True
-                    break
-            if skip: continue
-            
-            # Check conditions
-            for k, v in edge_condition.items():
-                if attr[k] not in v:
-                    skip = True
-                    break
-            if skip: continue
+                # Check conditions
+                skip = False
+                for k, v in edge_condition.items():
+                    # Skip if no specified nodes present in edge
+                    if k == 'nodes':
+                        if sum(1 for n in v if n in ed['edge']) == 0: 
+                            skip = True
+                            break
+                    
+                    # Skip if edge attributes don't matched specified conditions
+                    elif ed['attr'][k] not in v:
+                        skip = True
+                        break
+                if skip: continue
 
-            # Keep only relevant attributes
-            for a in attr.copy().keys():
-                if a not in edge_attrs_to_keep: del attr[a]
-            
-            # Save valid edge
-            G.add_edge(nodes[edge[0]], nodes[edge[1]], **attr)
+                # Load nodes
+                for node_id in ed['edge']:
+                    if node_id not in nodes:
+                        nodes[node_id] = Node(node_id, from_disk=node_path)
+                
+                # Save valid edge
+                G.add_edge(nodes[ed['edge'][0]], nodes[ed['edge'][1]], **ed['attr'])
 
     return G
 
@@ -248,7 +249,7 @@ class Node():
             }, f, ensure_ascii=False)
 
 
-    def add_comment(self, date, content, board, type_):
+    def add_comment(self, date, content, board, src, type_, ord_):
         """Add comment to corpus
         
         Parameters
@@ -289,7 +290,9 @@ class Node():
         self.corpus[date].append({
             "type": type_,
             "content": content,
-            "board": board
+            "board": board,
+            "ord": ord_,
+            "src": src
         })
 
 
@@ -386,7 +389,7 @@ class Node():
             start_d = datetime.date.fromisoformat(start)
             end_d = datetime.date.fromisoformat(end)
             day = datetime.date.fromisoformat(day)
-            if not start_d <= day and day <= end_d: continue
+            if not (start_d <= day and day <= end_d): continue
 
             for cmt in corp:
                 # Check boards
@@ -395,7 +398,7 @@ class Node():
                         # Update stats
                         stats['count-' + cmt['type']] += 1
                         stats['chars-' + cmt['type']] += len(''.join(cmt['content'].split()))
-                        tks = cmt['content'].split('\u3000')
+                        tks = cmt['content'].replace('\n', '\u3000').split('\u3000')
                         stats['tokens-' + cmt['type']] += len(tks)
                         tokens += tks
                 
@@ -404,8 +407,7 @@ class Node():
                     # Update stats
                     stats['count-' + cmt['type']] += 1
                     stats['chars-' + cmt['type']] += len(''.join(cmt['content'].split()))
-                    stats['tokens-' + cmt['type']] += len(cmt['content'].split('\u3000'))
-                    tks = cmt['content'].split('\u3000')
+                    tks = cmt['content'].replace('\n', '\u3000').split('\u3000')
                     stats['tokens-' + cmt['type']] += len(tks)
                     tokens += tks
         
@@ -429,14 +431,14 @@ class Node():
 
         return stats, vocab
 
-
+'''
 def load_Nodes(path="data/network/nodes"):
     node_ids = { f[:-11] for f in os.listdir("data/network/nodes") }
     nodes = {
         id_: Node(id_, from_disk=path) for id_ in node_ids
     }
     return nodes
-
+'''
 
 # networkx
 # G.add_edge(n1, n2, object=x)
@@ -447,10 +449,12 @@ if __name__ == "__main__":
     from time import time
 
     conditions = {
+        #'title': {'她答應了!她答應了!'},
+        #'tag': {'心情'}
         'date': set((datetime.date(2010,1,1) + datetime.timedelta(days=x)).isoformat() \
             for x in range(30)),
-        #'board': set("Gossiping"),
-        #'opinion': set(['pos-pos', 'pos-neg', 'pos-neu', 'neg-pos', 'neg-neg', 'neg-neu', 'neu-pos', 'neu-neg', 'neu-neu'])
+        #'board': {"Boy-Girl"},
+        #'opinion': {'pos-pos', 'pos-neg', 'pos-neu', 'neg-pos', 'neg-neg', 'neg-neu', 'neu-pos', 'neu-neg', 'neu-neu'}
     }
     count_edges_in = {
         'opinion': ['pos-pos', 'neg-neg'], 
