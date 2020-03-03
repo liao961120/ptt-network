@@ -4,7 +4,7 @@ import setuptools
 #    long_description = fh.read()
 
 setuptools.setup(
-    name="liao961120", # Replace with your own username
+    name="pttnet", # Replace with your own username
     version="0.0.1",
     author="Yongfu Liao",
     author_email="liao961120@gmail.com",
