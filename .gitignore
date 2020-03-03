@@ -1,4 +1,4 @@
-test*.py
+test*
 *.log
 
 
@@ -10,11 +10,15 @@ all_edges.jsonl
 all_nodes.pkl
 
 __pycache__
+.ipynb_checkpoints
 
 docs
 
-data
+ckiptagger
+
+data/
 data/corpus
 data/network/*.pkl
 
 paper
+jieba_zh_TW
