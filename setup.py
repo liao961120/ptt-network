@@ -6,6 +6,9 @@ import setuptools
 packages = [
     "pttnet",
 ]
+install_requires=[
+    "networkx>=2.4.0"
+]
 
 setuptools.setup(
     name="pttnet", # Replace with your own username
@@ -17,6 +20,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/liao961120/ptt-network",
     packages=packages,
+    install_requires=install_requires,
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
