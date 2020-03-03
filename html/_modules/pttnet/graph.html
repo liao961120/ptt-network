@@ -33,15 +33,15 @@
   <h1>Source code for pttnet.graph</h1><div class="highlight"><pre>
 <span></span><span class="c1">#%%</span>
 <span class="kn">import</span> <span class="nn">datetime</span>
-<span class="kn">import</span> <span class="nn">jieba</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">pickle</span>
 <span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
 <span class="kn">from</span> <span class="nn">pttnet.utils</span> <span class="kn">import</span> <span class="n">merge_dicts</span>
 
 
-<div class="viewcode-block" id="Graph"><a class="viewcode-back" href="../../doc/graph.html#pttnet.graph.Graph">[docs]</a><span class="k">def</span> <span class="nf">Graph</span><span class="p">(</span><span class="n">count_edges_in</span><span class="p">,</span> <span class="n">edge_condition</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">MG</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edge_attrs_to_keep</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">,</span> <span class="s1">&#39;opinion&#39;</span><span class="p">],</span> <span class="n">node_path</span><span class="o">=</span><span class="s2">&quot;data/network/nodes&quot;</span><span class="p">,</span> <span class="n">edge_path</span><span class="o">=</span><span class="s2">&quot;all_edges.jsonl&quot;</span><span class="p">):</span>
+<div class="viewcode-block" id="Graph"><a class="viewcode-back" href="../../doc/graph.html#pttnet.graph.Graph">[docs]</a><span class="k">def</span> <span class="nf">Graph</span><span class="p">(</span><span class="n">count_edges_in</span><span class="p">,</span> <span class="n">edge_condition</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">MG</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">years</span><span class="o">=</span><span class="p">[],</span> <span class="n">boards</span><span class="o">=</span><span class="p">[],</span> <span class="n">node_path</span><span class="o">=</span><span class="s2">&quot;data/network/nodes&quot;</span><span class="p">,</span> <span class="n">edge_path</span><span class="o">=</span><span class="s2">&quot;data/network/edges&quot;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Generate nx.Graph from PTT comment data</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
@@ -69,17 +69,14 @@
 <span class="sd">        ``{}`` to collapse all the same edges in the MultiGraph (regardless of criteria).</span>
 <span class="sd">    MG : nx.MultiGraph, optional</span>
 <span class="sd">        nx.MultiGraph to start from. If specified, will use the MultiGraph (created from</span>
-<span class="sd">        :py:func:`.loadMGraph`) from memory instead of reading the node and edge files</span>
+<span class="sd">        :py:func:`.MutiGraph`) from memory instead of reading the node and edge files</span>
 <span class="sd">        from disk (ignoring ``node_path`` and ``edge_path``). By default None.</span>
-<span class="sd">    edge_attrs_to_keep : list, optional</span>
-<span class="sd">        Edge attributes to keep when reading file from disk, by default [&#39;date&#39;, &#39;opinion&#39;]. </span>
-<span class="sd">        Data passed to :py:func:`.loadMGraph`.</span>
 <span class="sd">    node_path : str, optional</span>
 <span class="sd">        Path to the directory of node files, by default &quot;data/network/nodes&quot;. </span>
-<span class="sd">        Data passed to :py:func:`.loadMGraph`.</span>
+<span class="sd">        Data passed to :py:func:`.MutiGraph`.</span>
 <span class="sd">    edge_path : str, optional</span>
-<span class="sd">        File path to edge file, by default &quot;all_edges.jsonl&quot;. </span>
-<span class="sd">        Data passed to :py:func:`.loadMGraph`.</span>
+<span class="sd">        Path to the directory of edge files, by default &quot;data/network/edges&quot;. </span>
+<span class="sd">        Data passed to :py:func:`.MutiGraph`.</span>
 <span class="sd">    </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -92,26 +89,27 @@
 <span class="sd">    then reduce it to a ``networkx.Graph`` with :py:func:`.Graph`</span>
 
 <span class="sd">    &gt;&gt;&gt; conditions = {</span>
+<span class="sd">    ...     #&#39;nodes&#39;: [&#39;node_id1&#39;, &#39;node_id2&#39;, &#39;node_id3&#39;, ...]</span>
 <span class="sd">    ...     &#39;date&#39;: set(</span>
 <span class="sd">    ...             (datetime.date(2010,1,1) + datetime.timedelta(days=x)).isoformat() </span>
 <span class="sd">    ...             for x in range(30)  # get 30 days comments starting from 2010-01-01</span>
 <span class="sd">    ...         ), </span>
 <span class="sd">    ...     &#39;opinion&#39;: set([&#39;pos-pos&#39;, &#39;pos-neg&#39;, &#39;pos-neu&#39;, &#39;neg-pos&#39;, &#39;neg-neg&#39;, &#39;neg-neu&#39;])</span>
 <span class="sd">    ... }</span>
-<span class="sd">    &gt;&gt;&gt; MG = loadMGraph(edge_condition=conditions, node_path=&quot;data/network/nodes&quot;, edge_path=&quot;data/all_edges.jsonl&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; MG = MultiGraph(edge_condition=conditions, boards=[&#39;Boy-Girl&#39;] ,years=[2007, 2008, 2009])</span>
 <span class="sd">    &gt;&gt;&gt; </span>
 <span class="sd">    &gt;&gt;&gt; criteria = {</span>
-<span class="sd">    ... &#39;opinion&#39;: [&#39;pos-pos&#39;, &#39;neg-neg&#39;],</span>
+<span class="sd">    ...     &#39;opinion&#39;: [&#39;pos-pos&#39;, &#39;neg-neg&#39;],</span>
 <span class="sd">    ... }</span>
 <span class="sd">    &gt;&gt;&gt; G = Graph(count_edges_in=criteria, MG=MG)  # Further reduce graph</span>
 
 <span class="sd">    Alternatively, directly create a ``networkx.Graph`` from reading disk file:</span>
 
-<span class="sd">    &gt;&gt;&gt; G = Graph(edge_condition=conditions, count_edges_in=criteria, node_path=&quot;data/network/nodes&quot;, edge_path=&quot;data/all_edges.jsonl&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; G = Graph(edge_condition=conditions, count_edges_in=criteria)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">MG</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">MG</span> <span class="o">=</span> <span class="n">loadMGraph</span><span class="p">(</span><span class="n">edge_condition</span><span class="p">,</span> <span class="n">edge_attrs_to_keep</span><span class="p">,</span> <span class="n">node_path</span><span class="p">,</span> <span class="n">edge_path</span><span class="p">)</span>
+        <span class="n">MG</span> <span class="o">=</span> <span class="n">MultiGraph</span><span class="p">(</span><span class="n">edge_condition</span><span class="p">,</span> <span class="n">years</span><span class="p">,</span> <span class="n">boards</span><span class="p">,</span> <span class="n">node_path</span><span class="p">,</span> <span class="n">edge_path</span><span class="p">)</span>
 
     <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">MG</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -126,23 +124,21 @@
 
         <span class="c1"># use edge weight</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">G</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">):</span>
-            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">corpus</span><span class="o">=</span><span class="p">[</span><span class="n">attr</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]])</span>
+            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">corpus</span><span class="o">=</span><span class="p">[</span><span class="n">attr</span><span class="p">])</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">G</span><span class="p">[</span><span class="n">n1</span><span class="p">][</span><span class="n">n2</span><span class="p">][</span><span class="s1">&#39;weight&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
-            <span class="n">G</span><span class="p">[</span><span class="n">n1</span><span class="p">][</span><span class="n">n2</span><span class="p">][</span><span class="s1">&#39;corpus&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">attr</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">])</span>
+            <span class="n">G</span><span class="p">[</span><span class="n">n1</span><span class="p">][</span><span class="n">n2</span><span class="p">][</span><span class="s1">&#39;corpus&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
     
     <span class="k">return</span> <span class="n">G</span></div>
 
 
-<div class="viewcode-block" id="loadMGraph"><a class="viewcode-back" href="../../doc/graph.html#pttnet.graph.loadMGraph">[docs]</a><span class="k">def</span> <span class="nf">loadMGraph</span><span class="p">(</span><span class="n">edge_condition</span><span class="p">,</span> <span class="n">edge_attrs_to_keep</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">,</span> <span class="s1">&#39;opinion&#39;</span><span class="p">],</span> <span class="n">node_path</span><span class="o">=</span><span class="s2">&quot;data/network/nodes&quot;</span><span class="p">,</span> <span class="n">edge_path</span><span class="o">=</span><span class="s2">&quot;all_edges.jsonl&quot;</span><span class="p">):</span>
+<div class="viewcode-block" id="MultiGraph"><a class="viewcode-back" href="../../doc/graph.html#pttnet.graph.MultiGraph">[docs]</a><span class="k">def</span> <span class="nf">MultiGraph</span><span class="p">(</span><span class="n">edge_condition</span><span class="p">,</span> <span class="n">years</span><span class="o">=</span><span class="p">[</span><span class="n">y</span> <span class="o">+</span> <span class="mi">2006</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">7</span><span class="p">)],</span> <span class="n">boards</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Boy-Girl&#39;</span><span class="p">],</span> <span class="n">node_path</span><span class="o">=</span><span class="s2">&quot;data/network/nodes&quot;</span><span class="p">,</span> <span class="n">edge_path</span><span class="o">=</span><span class="s1">&#39;data/network/edges&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Generate nx.Graph from PTT comment data</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    edge_condition : dict</span>
 <span class="sd">        See ``edge_condition`` in :py:func:`.Graph`.</span>
-<span class="sd">    edge_attrs_to_keep : list, optional</span>
-<span class="sd">        [description], by default [&#39;date&#39;, &#39;opinion&#39;]</span>
 <span class="sd">    node_path : str, optional</span>
 <span class="sd">        [description], by default &quot;all_nodes.pkl&quot;</span>
 <span class="sd">    edge_path : str, optional</span>
@@ -155,43 +151,47 @@
 <span class="sd">        any pair of nodes.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-
-    <span class="c1"># Load nodes</span>
-    <span class="n">nodes</span> <span class="o">=</span> <span class="n">load_Nodes</span><span class="p">(</span><span class="n">node_path</span><span class="p">)</span>
-    <span class="n">node_ids</span> <span class="o">=</span> <span class="n">nodes</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
-
+    <span class="c1"># Get edge files&#39; paths</span>
+    <span class="n">fps</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">board</span><span class="p">,</span> <span class="n">year</span> <span class="ow">in</span> <span class="p">[(</span><span class="n">b</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">y</span><span class="p">))</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">boards</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">years</span><span class="p">]:</span>
+        <span class="n">fp</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">edge_path</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{board}</span><span class="s2">_</span><span class="si">{year}</span><span class="s2">_edges.jsonl&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">fp</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Edge file `</span><span class="si">{fp}</span><span class="s2">` doesn&#39;t exist!&quot;</span><span class="p">)</span>
+        <span class="n">fps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+    
     <span class="c1"># Create nx.Graph</span>
     <span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">MultiGraph</span><span class="p">()</span>
 
-    <span class="c1"># Loop over edges in file</span>
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">edge_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">fp</span> <span class="ow">in</span> <span class="n">fps</span><span class="p">:</span>
+        <span class="c1"># Loop over edges in a file</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
 
-        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
-            <span class="n">edge</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;edge&#39;</span><span class="p">]</span>
-            <span class="n">attr</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;attr&#39;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">ed</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
 
-            <span class="n">skip</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="c1"># Check nodes present</span>
-            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">edge</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">node_ids</span><span class="p">:</span>
-                    <span class="n">skip</span> <span class="o">=</span> <span class="kc">True</span>
-                    <span class="k">break</span>
-            <span class="k">if</span> <span class="n">skip</span><span class="p">:</span> <span class="k">continue</span>
-            
-            <span class="c1"># Check conditions</span>
-            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">edge_condition</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="k">if</span> <span class="n">attr</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
-                    <span class="n">skip</span> <span class="o">=</span> <span class="kc">True</span>
-                    <span class="k">break</span>
-            <span class="k">if</span> <span class="n">skip</span><span class="p">:</span> <span class="k">continue</span>
+                <span class="c1"># Check conditions</span>
+                <span class="n">skip</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">edge_condition</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="c1"># Skip if no specified nodes present in edge</span>
+                    <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="s1">&#39;nodes&#39;</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">v</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">ed</span><span class="p">[</span><span class="s1">&#39;edge&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> 
+                            <span class="n">skip</span> <span class="o">=</span> <span class="kc">True</span>
+                            <span class="k">break</span>
+                    
+                    <span class="c1"># Skip if edge attributes don&#39;t matched specified conditions</span>
+                    <span class="k">elif</span> <span class="n">ed</span><span class="p">[</span><span class="s1">&#39;attr&#39;</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+                        <span class="n">skip</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">break</span>
+                <span class="k">if</span> <span class="n">skip</span><span class="p">:</span> <span class="k">continue</span>
 
-            <span class="c1"># Keep only relevant attributes</span>
-            <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">attr</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                <span class="k">if</span> <span class="n">a</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">edge_attrs_to_keep</span><span class="p">:</span> <span class="k">del</span> <span class="n">attr</span><span class="p">[</span><span class="n">a</span><span class="p">]</span>
-            
-            <span class="c1"># Save valid edge</span>
-            <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">nodes</span><span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span> <span class="n">nodes</span><span class="p">[</span><span class="n">edge</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="o">**</span><span class="n">attr</span><span class="p">)</span>
+                <span class="c1"># Load nodes</span>
+                <span class="k">for</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">ed</span><span class="p">[</span><span class="s1">&#39;edge&#39;</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="n">node_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">nodes</span><span class="p">:</span>
+                        <span class="n">nodes</span><span class="p">[</span><span class="n">node_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">node_id</span><span class="p">,</span> <span class="n">from_disk</span><span class="o">=</span><span class="n">node_path</span><span class="p">)</span>
+                
+                <span class="c1"># Save valid edge</span>
+                <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">nodes</span><span class="p">[</span><span class="n">ed</span><span class="p">[</span><span class="s1">&#39;edge&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]],</span> <span class="n">nodes</span><span class="p">[</span><span class="n">ed</span><span class="p">[</span><span class="s1">&#39;edge&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]],</span> <span class="o">**</span><span class="n">ed</span><span class="p">[</span><span class="s1">&#39;attr&#39;</span><span class="p">])</span>
 
     <span class="k">return</span> <span class="n">G</span></div>
 
@@ -282,7 +282,7 @@
             <span class="p">},</span> <span class="n">f</span><span class="p">,</span> <span class="n">ensure_ascii</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="Node.add_comment"><a class="viewcode-back" href="../../doc/Node.html#pttnet.graph.Node.add_comment">[docs]</a>    <span class="k">def</span> <span class="nf">add_comment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">content</span><span class="p">,</span> <span class="n">board</span><span class="p">,</span> <span class="n">type_</span><span class="p">):</span>
+<div class="viewcode-block" id="Node.add_comment"><a class="viewcode-back" href="../../doc/Node.html#pttnet.graph.Node.add_comment">[docs]</a>    <span class="k">def</span> <span class="nf">add_comment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">content</span><span class="p">,</span> <span class="n">board</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">type_</span><span class="p">,</span> <span class="n">ord_</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add comment to corpus</span>
 <span class="sd">        </span>
 <span class="sd">        Parameters</span>
@@ -323,7 +323,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">corpus</span><span class="p">[</span><span class="n">date</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
             <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">type_</span><span class="p">,</span>
             <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">content</span><span class="p">,</span>
-            <span class="s2">&quot;board&quot;</span><span class="p">:</span> <span class="n">board</span>
+            <span class="s2">&quot;board&quot;</span><span class="p">:</span> <span class="n">board</span><span class="p">,</span>
+            <span class="s2">&quot;ord&quot;</span><span class="p">:</span> <span class="n">ord_</span><span class="p">,</span>
+            <span class="s2">&quot;src&quot;</span><span class="p">:</span> <span class="n">src</span>
         <span class="p">})</span></div>
 
 
@@ -420,7 +422,7 @@
             <span class="n">start_d</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
             <span class="n">end_d</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">end</span><span class="p">)</span>
             <span class="n">day</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">day</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">start_d</span> <span class="o">&lt;=</span> <span class="n">day</span> <span class="ow">and</span> <span class="n">day</span> <span class="o">&lt;=</span> <span class="n">end_d</span><span class="p">:</span> <span class="k">continue</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">start_d</span> <span class="o">&lt;=</span> <span class="n">day</span> <span class="ow">and</span> <span class="n">day</span> <span class="o">&lt;=</span> <span class="n">end_d</span><span class="p">):</span> <span class="k">continue</span>
 
             <span class="k">for</span> <span class="n">cmt</span> <span class="ow">in</span> <span class="n">corp</span><span class="p">:</span>
                 <span class="c1"># Check boards</span>
@@ -429,7 +431,7 @@
                         <span class="c1"># Update stats</span>
                         <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;count-&#39;</span> <span class="o">+</span> <span class="n">cmt</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
                         <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;chars-&#39;</span> <span class="o">+</span> <span class="n">cmt</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]]</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmt</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()))</span>
-                        <span class="n">tks</span> <span class="o">=</span> <span class="n">cmt</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\u3000</span><span class="s1">&#39;</span><span class="p">)</span>
+                        <span class="n">tks</span> <span class="o">=</span> <span class="n">cmt</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\u3000</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\u3000</span><span class="s1">&#39;</span><span class="p">)</span>
                         <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;tokens-&#39;</span> <span class="o">+</span> <span class="n">cmt</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]]</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tks</span><span class="p">)</span>
                         <span class="n">tokens</span> <span class="o">+=</span> <span class="n">tks</span>
                 
@@ -438,8 +440,7 @@
                     <span class="c1"># Update stats</span>
                     <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;count-&#39;</span> <span class="o">+</span> <span class="n">cmt</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]]</span> <span class="o">+=</span> <span class="mi">1</span>
                     <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;chars-&#39;</span> <span class="o">+</span> <span class="n">cmt</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]]</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmt</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()))</span>
-                    <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;tokens-&#39;</span> <span class="o">+</span> <span class="n">cmt</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]]</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">cmt</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\u3000</span><span class="s1">&#39;</span><span class="p">))</span>
-                    <span class="n">tks</span> <span class="o">=</span> <span class="n">cmt</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\u3000</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="n">tks</span> <span class="o">=</span> <span class="n">cmt</span><span class="p">[</span><span class="s1">&#39;content&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\u3000</span><span class="s1">&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\u3000</span><span class="s1">&#39;</span><span class="p">)</span>
                     <span class="n">stats</span><span class="p">[</span><span class="s1">&#39;tokens-&#39;</span> <span class="o">+</span> <span class="n">cmt</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]]</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tks</span><span class="p">)</span>
                     <span class="n">tokens</span> <span class="o">+=</span> <span class="n">tks</span>
         
@@ -463,14 +464,14 @@
 
         <span class="k">return</span> <span class="n">stats</span><span class="p">,</span> <span class="n">vocab</span></div></div>
 
-
-<span class="k">def</span> <span class="nf">load_Nodes</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s2">&quot;data/network/nodes&quot;</span><span class="p">):</span>
-    <span class="n">node_ids</span> <span class="o">=</span> <span class="p">{</span> <span class="n">f</span><span class="p">[:</span><span class="o">-</span><span class="mi">11</span><span class="p">]</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="s2">&quot;data/network/nodes&quot;</span><span class="p">)</span> <span class="p">}</span>
-    <span class="n">nodes</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="n">id_</span><span class="p">:</span> <span class="n">Node</span><span class="p">(</span><span class="n">id_</span><span class="p">,</span> <span class="n">from_disk</span><span class="o">=</span><span class="n">path</span><span class="p">)</span> <span class="k">for</span> <span class="n">id_</span> <span class="ow">in</span> <span class="n">node_ids</span>
-    <span class="p">}</span>
-    <span class="k">return</span> <span class="n">nodes</span>
-
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">def load_Nodes(path=&quot;data/network/nodes&quot;):</span>
+<span class="sd">    node_ids = { f[:-11] for f in os.listdir(&quot;data/network/nodes&quot;) }</span>
+<span class="sd">    nodes = {</span>
+<span class="sd">        id_: Node(id_, from_disk=path) for id_ in node_ids</span>
+<span class="sd">    }</span>
+<span class="sd">    return nodes</span>
+<span class="sd">&#39;&#39;&#39;</span>
 
 <span class="c1"># networkx</span>
 <span class="c1"># G.add_edge(n1, n2, object=x)</span>
@@ -481,10 +482,12 @@
     <span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
 
     <span class="n">conditions</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="c1">#&#39;title&#39;: {&#39;她答應了!她答應了!&#39;},</span>
+        <span class="c1">#&#39;tag&#39;: {&#39;心情&#39;}</span>
         <span class="s1">&#39;date&#39;</span><span class="p">:</span> <span class="nb">set</span><span class="p">((</span><span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">(</span><span class="mi">2010</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">x</span><span class="p">))</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> \
             <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">)),</span>
-        <span class="c1">#&#39;board&#39;: set(&quot;Gossiping&quot;),</span>
-        <span class="c1">#&#39;opinion&#39;: set([&#39;pos-pos&#39;, &#39;pos-neg&#39;, &#39;pos-neu&#39;, &#39;neg-pos&#39;, &#39;neg-neg&#39;, &#39;neg-neu&#39;, &#39;neu-pos&#39;, &#39;neu-neg&#39;, &#39;neu-neu&#39;])</span>
+        <span class="c1">#&#39;board&#39;: {&quot;Boy-Girl&quot;},</span>
+        <span class="c1">#&#39;opinion&#39;: {&#39;pos-pos&#39;, &#39;pos-neg&#39;, &#39;pos-neu&#39;, &#39;neg-pos&#39;, &#39;neg-neg&#39;, &#39;neg-neu&#39;, &#39;neu-pos&#39;, &#39;neu-neg&#39;, &#39;neu-neu&#39;}</span>
     <span class="p">}</span>
     <span class="n">count_edges_in</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s1">&#39;opinion&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;pos-pos&#39;</span><span class="p">,</span> <span class="s1">&#39;neg-neg&#39;</span><span class="p">],</span> 

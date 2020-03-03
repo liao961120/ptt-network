@@ -35,7 +35,7 @@
 <span id="graph"></span><h1><code class="docutils literal notranslate"><span class="pre">graph</span></code><a class="headerlink" href="#module-pttnet.graph" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="pttnet.graph.Graph">
-<code class="sig-prename descclassname">pttnet.graph.</code><code class="sig-name descname">Graph</code><span class="sig-paren">(</span><em class="sig-param">count_edges_in, edge_condition=None, MG=None, edge_attrs_to_keep=['date', 'opinion'], node_path='data/network/nodes', edge_path='all_edges.jsonl'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pttnet/graph.html#Graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pttnet.graph.Graph" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">pttnet.graph.</code><code class="sig-name descname">Graph</code><span class="sig-paren">(</span><em class="sig-param">count_edges_in</em>, <em class="sig-param">edge_condition=None</em>, <em class="sig-param">MG=None</em>, <em class="sig-param">years=[]</em>, <em class="sig-param">boards=[]</em>, <em class="sig-param">node_path='data/network/nodes'</em>, <em class="sig-param">edge_path='data/network/edges'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pttnet/graph.html#Graph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pttnet.graph.Graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate nx.Graph from PTT comment data</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
@@ -51,7 +51,7 @@ is as below:</p>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>Data passed to <a class="reference internal" href="#pttnet.graph.loadMGraph" title="pttnet.graph.loadMGraph"><code class="xref py py-func docutils literal notranslate"><span class="pre">loadMGraph()</span></code></a>.</p>
+<p>Data passed to <code class="xref py py-func docutils literal notranslate"><span class="pre">loadMGraph()</span></code>.</p>
 </dd>
 <dt><strong>count_edges_in</strong><span class="classifier">dict, optional</span></dt><dd><p>Criteria to reduce nx.MultiGraph into nx.Graph. The structure is similar 
 to that of <code class="docutils literal notranslate"><span class="pre">edge_condition</span></code>. The same edges (having same nodes u, v) with 
@@ -60,17 +60,14 @@ Edges in the MultiGraph not matching the criteria are pruned. Use emty dict
 <code class="docutils literal notranslate"><span class="pre">{}</span></code> to collapse all the same edges in the MultiGraph (regardless of criteria).</p>
 </dd>
 <dt><strong>MG</strong><span class="classifier">nx.MultiGraph, optional</span></dt><dd><p>nx.MultiGraph to start from. If specified, will use the MultiGraph (created from
-<a class="reference internal" href="#pttnet.graph.loadMGraph" title="pttnet.graph.loadMGraph"><code class="xref py py-func docutils literal notranslate"><span class="pre">loadMGraph()</span></code></a>) from memory instead of reading the node and edge files
+<code class="xref py py-func docutils literal notranslate"><span class="pre">MutiGraph()</span></code>) from memory instead of reading the node and edge files
 from disk (ignoring <code class="docutils literal notranslate"><span class="pre">node_path</span></code> and <code class="docutils literal notranslate"><span class="pre">edge_path</span></code>). By default None.</p>
 </dd>
-<dt><strong>edge_attrs_to_keep</strong><span class="classifier">list, optional</span></dt><dd><p>Edge attributes to keep when reading file from disk, by default [‘date’, ‘opinion’]. 
-Data passed to <a class="reference internal" href="#pttnet.graph.loadMGraph" title="pttnet.graph.loadMGraph"><code class="xref py py-func docutils literal notranslate"><span class="pre">loadMGraph()</span></code></a>.</p>
-</dd>
 <dt><strong>node_path</strong><span class="classifier">str, optional</span></dt><dd><p>Path to the directory of node files, by default “data/network/nodes”. 
-Data passed to <a class="reference internal" href="#pttnet.graph.loadMGraph" title="pttnet.graph.loadMGraph"><code class="xref py py-func docutils literal notranslate"><span class="pre">loadMGraph()</span></code></a>.</p>
+Data passed to <code class="xref py py-func docutils literal notranslate"><span class="pre">MutiGraph()</span></code>.</p>
 </dd>
-<dt><strong>edge_path</strong><span class="classifier">str, optional</span></dt><dd><p>File path to edge file, by default “all_edges.jsonl”. 
-Data passed to <a class="reference internal" href="#pttnet.graph.loadMGraph" title="pttnet.graph.loadMGraph"><code class="xref py py-func docutils literal notranslate"><span class="pre">loadMGraph()</span></code></a>.</p>
+<dt><strong>edge_path</strong><span class="classifier">str, optional</span></dt><dd><p>Path to the directory of edge files, by default “data/network/edges”. 
+Data passed to <code class="xref py py-func docutils literal notranslate"><span class="pre">MutiGraph()</span></code>.</p>
 </dd>
 </dl>
 </dd>
@@ -82,39 +79,38 @@ Data passed to <a class="reference internal" href="#pttnet.graph.loadMGraph" tit
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<p>First create a <code class="docutils literal notranslate"><span class="pre">networkx.MultiGraph</span></code> with <a class="reference internal" href="#pttnet.graph.loadMGraph" title="pttnet.graph.loadMGraph"><code class="xref py py-func docutils literal notranslate"><span class="pre">loadMGraph()</span></code></a>
+<p>First create a <code class="docutils literal notranslate"><span class="pre">networkx.MultiGraph</span></code> with <code class="xref py py-func docutils literal notranslate"><span class="pre">loadMGraph()</span></code>
 then reduce it to a <code class="docutils literal notranslate"><span class="pre">networkx.Graph</span></code> with <a class="reference internal" href="#pttnet.graph.Graph" title="pttnet.graph.Graph"><code class="xref py py-func docutils literal notranslate"><span class="pre">Graph()</span></code></a></p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">conditions</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>    <span class="c1">#&#39;nodes&#39;: [&#39;node_id1&#39;, &#39;node_id2&#39;, &#39;node_id3&#39;, ...]</span>
 <span class="gp">... </span>    <span class="s1">&#39;date&#39;</span><span class="p">:</span> <span class="nb">set</span><span class="p">(</span>
 <span class="gp">... </span>            <span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">(</span><span class="mi">2010</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">x</span><span class="p">))</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> 
 <span class="gp">... </span>            <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span>  <span class="c1"># get 30 days comments starting from 2010-01-01</span>
 <span class="gp">... </span>        <span class="p">),</span> 
 <span class="gp">... </span>    <span class="s1">&#39;opinion&#39;</span><span class="p">:</span> <span class="nb">set</span><span class="p">([</span><span class="s1">&#39;pos-pos&#39;</span><span class="p">,</span> <span class="s1">&#39;pos-neg&#39;</span><span class="p">,</span> <span class="s1">&#39;pos-neu&#39;</span><span class="p">,</span> <span class="s1">&#39;neg-pos&#39;</span><span class="p">,</span> <span class="s1">&#39;neg-neg&#39;</span><span class="p">,</span> <span class="s1">&#39;neg-neu&#39;</span><span class="p">])</span>
 <span class="gp">... </span><span class="p">}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">MG</span> <span class="o">=</span> <span class="n">loadMGraph</span><span class="p">(</span><span class="n">edge_condition</span><span class="o">=</span><span class="n">conditions</span><span class="p">,</span> <span class="n">node_path</span><span class="o">=</span><span class="s2">&quot;data/network/nodes&quot;</span><span class="p">,</span> <span class="n">edge_path</span><span class="o">=</span><span class="s2">&quot;data/all_edges.jsonl&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">MG</span> <span class="o">=</span> <span class="n">MultiGraph</span><span class="p">(</span><span class="n">edge_condition</span><span class="o">=</span><span class="n">conditions</span><span class="p">,</span> <span class="n">boards</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Boy-Girl&#39;</span><span class="p">]</span> <span class="p">,</span><span class="n">years</span><span class="o">=</span><span class="p">[</span><span class="mi">2007</span><span class="p">,</span> <span class="mi">2008</span><span class="p">,</span> <span class="mi">2009</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">criteria</span> <span class="o">=</span> <span class="p">{</span>
-<span class="gp">... </span><span class="s1">&#39;opinion&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;pos-pos&#39;</span><span class="p">,</span> <span class="s1">&#39;neg-neg&#39;</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="s1">&#39;opinion&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;pos-pos&#39;</span><span class="p">,</span> <span class="s1">&#39;neg-neg&#39;</span><span class="p">],</span>
 <span class="gp">... </span><span class="p">}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">Graph</span><span class="p">(</span><span class="n">count_edges_in</span><span class="o">=</span><span class="n">criteria</span><span class="p">,</span> <span class="n">MG</span><span class="o">=</span><span class="n">MG</span><span class="p">)</span>  <span class="c1"># Further reduce graph</span>
 </pre></div>
 </div>
 <p>Alternatively, directly create a <code class="docutils literal notranslate"><span class="pre">networkx.Graph</span></code> from reading disk file:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">Graph</span><span class="p">(</span><span class="n">edge_condition</span><span class="o">=</span><span class="n">conditions</span><span class="p">,</span> <span class="n">count_edges_in</span><span class="o">=</span><span class="n">criteria</span><span class="p">,</span> <span class="n">node_path</span><span class="o">=</span><span class="s2">&quot;data/network/nodes&quot;</span><span class="p">,</span> <span class="n">edge_path</span><span class="o">=</span><span class="s2">&quot;data/all_edges.jsonl&quot;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span> <span class="o">=</span> <span class="n">Graph</span><span class="p">(</span><span class="n">edge_condition</span><span class="o">=</span><span class="n">conditions</span><span class="p">,</span> <span class="n">count_edges_in</span><span class="o">=</span><span class="n">criteria</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
 
 <dl class="function">
-<dt id="pttnet.graph.loadMGraph">
-<code class="sig-prename descclassname">pttnet.graph.</code><code class="sig-name descname">loadMGraph</code><span class="sig-paren">(</span><em class="sig-param">edge_condition, edge_attrs_to_keep=['date', 'opinion'], node_path='data/network/nodes', edge_path='all_edges.jsonl'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pttnet/graph.html#loadMGraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pttnet.graph.loadMGraph" title="Permalink to this definition">¶</a></dt>
+<dt id="pttnet.graph.MultiGraph">
+<code class="sig-prename descclassname">pttnet.graph.</code><code class="sig-name descname">MultiGraph</code><span class="sig-paren">(</span><em class="sig-param">edge_condition, years=[2006, 2007, 2008, 2009, 2010, 2011, 2012], boards=['Boy-Girl'], node_path='data/network/nodes', edge_path='data/network/edges'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pttnet/graph.html#MultiGraph"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pttnet.graph.MultiGraph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate nx.Graph from PTT comment data</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>edge_condition</strong><span class="classifier">dict</span></dt><dd><p>See <code class="docutils literal notranslate"><span class="pre">edge_condition</span></code> in <a class="reference internal" href="#pttnet.graph.Graph" title="pttnet.graph.Graph"><code class="xref py py-func docutils literal notranslate"><span class="pre">Graph()</span></code></a>.</p>
-</dd>
-<dt><strong>edge_attrs_to_keep</strong><span class="classifier">list, optional</span></dt><dd><p>[description], by default [‘date’, ‘opinion’]</p>
 </dd>
 <dt><strong>node_path</strong><span class="classifier">str, optional</span></dt><dd><p>[description], by default “all_nodes.pkl”</p>
 </dd>
