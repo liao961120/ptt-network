@@ -9,7 +9,7 @@ setuptools.setup(
     author="Yongfu Liao",
     author_email="liao961120@gmail.com",
     description="PTT Comments as Social Network Data",
-    long_description=description,
+    long_description="PTT Comments as Social Network Data",
     long_description_content_type="text/markdown",
     url="https://github.com/liao961120/ptt-network",
     packages=setuptools.find_packages(),
