@@ -19,12 +19,12 @@ YEARS = [y for y in sys.argv[2].split(',')]
 OUT_DIR = 'data/network/nodes'
 
 # Check command line arguments
-if BOARD not in os.listdir("data/corpus/"): 
+if BOARD not in os.listdir("data/corpus/segmented/"): 
     raise Exception(f"{BOARD} doesn't exist!" )
 for y in YEARS:
-    years = os.listdir(f"data/corpus/{BOARD}")
+    years = os.listdir(f"data/corpus/segmented/{BOARD}")
     if y not in years:
-        raise Exception(f"data/corpus/{BOARD}/{y} doesn't exist!") 
+        raise Exception(f"data/corpus/segmented/{BOARD}/{y} doesn't exist!") 
 
 
 # Read post data
@@ -51,13 +51,15 @@ for i, post in enumerate(posts):
         comment = {
             'date': post['date'],
             'board': post['board'],
-            'content': '\u3000'.join(preprocess.segment(cmt['content'])),
-            'type_': cmt['type']
+            'content': cmt['content'],
+            'src': post['id'] , 
+            'type_': cmt['type'],
+            'ord_': cmt['order']
         }
         all_nodes[cmt['author']].add_comment(**comment)
     
     # Show progress / save nodes to disk
-    if i % int(post_num/20) == 0 or i == post_num - 1: 
+    if i % max(int(post_num/20), 1) == 0 or i == post_num - 1: 
         logging.info(f"Progressed: {(i+1)/post_num:.2%}")
         
         # Write node data to disk
@@ -70,5 +72,4 @@ for i, post in enumerate(posts):
 
 
 logging.info(f"Processed {cmt_count} comments ({post_num} posts) in {(time() - start)/60:.2} mins")
-
 logging.info(f"Finished in {(time() - start0)/60:.2} mins")

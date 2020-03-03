@@ -23,12 +23,12 @@ for year in YEARS:
     if os.path.exists(OUT_FILE): os.remove(OUT_FILE)
 
 # Check command line arguments
-if BOARD not in os.listdir("data/corpus/"): 
+if BOARD not in os.listdir("data/corpus/segmented/"): 
     raise Exception(f"{BOARD} doesn't exist!" )
 for y in YEARS:
-    years = os.listdir(f"data/corpus/{BOARD}")
+    years = os.listdir(f"data/corpus/segmented/{BOARD}")
     if y not in years:
-        raise Exception(f"data/corpus/{BOARD}/{y} doesn't exist!") 
+        raise Exception(f"data/corpus/segmented/{BOARD}/{y} doesn't exist!") 
 
 # Read post data
 posts = preprocess.load_comments_data_from_corpus(boards=[BOARD], years=YEARS)
@@ -45,9 +45,6 @@ for i, post in enumerate(posts):
     year = post['date'][:4]
     OUT_FILE = f'data/network/{BOARD}_{year}_edges.jsonl'
 
-    # Collapse comments to a single string
-    comments = '\u3000'.join(c['content'] for c in post['comments'])
-
     with open(OUT_FILE, "a") as f:
 
         # Get edges in a post
@@ -59,6 +56,9 @@ for i, post in enumerate(posts):
             edge = {
                 'edge': (cmt1['author'], cmt2['author']),
                 'attr': {
+                    'title': post['title'],
+                    'isRe': post['isRe'],
+                    'tag': post['tag'],
                     'date': post['date'],
                     'board': post['board'],
                     'opinion': f"{cmt1['type']}-{cmt2['type']}",
@@ -71,7 +71,7 @@ for i, post in enumerate(posts):
             f.write('\n')
     
     # Show progress
-    if i % int(post_num/20) == 0: logging.info(f"Progressed: {i/post_num:.2%}")
+    if i % max(int(post_num/20), 1) == 0: logging.info(f"Progressed: {i/post_num:.2%}")
 
 
 logging.info(f"Processed {cmt_count} comments ({post_num} posts) in {(time() - start)/60:.2} mins")
