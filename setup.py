@@ -1,7 +1,7 @@
 import setuptools
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
+#with open("README.md", "r") as fh:
+#    long_description = fh.read()
 
 setuptools.setup(
     name="liao961120", # Replace with your own username
@@ -9,7 +9,7 @@ setuptools.setup(
     author="Yongfu Liao",
     author_email="liao961120@gmail.com",
     description="PTT Comments as Social Network Data",
-    long_description=long_description,
+    long_description=description,
     long_description_content_type="text/markdown",
     url="https://github.com/liao961120/ptt-network",
     packages=setuptools.find_packages(),
