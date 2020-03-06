@@ -20,5 +20,7 @@ data/
 data/corpus
 data/network/*.pkl
 
+0304討論.txt
+
 paper
 jieba_zh_TW
