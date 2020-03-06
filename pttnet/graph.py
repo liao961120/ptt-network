@@ -81,10 +81,16 @@ def Graph(count_edges_in, edge_condition=None, MG=None, years=[], boards=[], nod
     G = nx.Graph()
     for n1, n2, attr in MG.edges(data=True, keys=False):
         
-        # Reduce Graph with only relevent attributes
+        # Reduce Graph to only relevent attributes
         skip = False
         for k, v in count_edges_in.items():
-            if attr[k] not in v:
+            # check node conditions
+            if k == 'nodes':
+                if sum(1 for n in v if n in {n1.id, n2.id}) == 0: 
+                    skip = True
+                    break
+            # Skip if no specified nodes present in edge
+            elif attr[k] not in v:
                 skip = True
                 break
         if skip: continue
