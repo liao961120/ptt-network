@@ -1,4 +1,5 @@
 # Usage: python3 comment2nodes.py <board_name> <year1,year2,...>
+BASE_DIR = 'data/corpus/' # 'data/corpus/' 'data/corpus/segmented/
 
 import os
 import sys
@@ -19,16 +20,16 @@ YEARS = [y for y in sys.argv[2].split(',')]
 OUT_DIR = 'data/network/nodes'
 
 # Check command line arguments
-if BOARD not in os.listdir("data/corpus/segmented/"): 
+if BOARD not in os.listdir(BASE_DIR): 
     raise Exception(f"{BOARD} doesn't exist!" )
 for y in YEARS:
-    years = os.listdir(f"data/corpus/segmented/{BOARD}")
+    years = os.listdir(os.path.join(BASE_DIR, BOARD))
     if y not in years:
-        raise Exception(f"data/corpus/segmented/{BOARD}/{y} doesn't exist!") 
+        raise Exception(f"{os.path.join(BASE_DIR, BOARD, y)} doesn't exist!") 
 
 
 # Read post data
-posts = preprocess.load_comments_data_from_corpus(boards=[BOARD], years=YEARS)
+posts = preprocess.load_comments_data_from_corpus(boards=[BOARD], years=YEARS, basedir=BASE_DIR)
 post_num = len(posts)
 
 logging.info(f"Start processing posts. Executed {time() - start0} secs")

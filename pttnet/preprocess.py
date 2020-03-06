@@ -3,16 +3,17 @@ import json
 import re
 from datetime import datetime
 
-def load_comments_data_from_corpus(boards=["Gossiping"], years=[2009]):
+def load_comments_data_from_corpus(boards=["Gossiping"], years=[2009], basedir='data/corpus/segmented/', ext='.json'):
     
     posts = []
 
     for board in boards:
         for year in years:
-            fp = f"data/corpus/segmented/{board}/{year}/"
+            fp = os.path.join(basedir, board, year)
 
             for post_name in os.listdir(fp):
-                post_path = fp + post_name
+                if not post_name.endswith(ext): continue
+                post_path = os.path.join(fp, post_name)
 
                 with open(post_path) as f:
                     data = json.load(f)
