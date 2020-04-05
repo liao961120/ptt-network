@@ -9,7 +9,7 @@ def load_comments_data_from_corpus(boards=["Gossiping"], years=[2009], basedir='
 
     for board in boards:
         for year in years:
-            fp = os.path.join(basedir, board, year)
+            fp = os.path.join(basedir, board, str(year))
 
             for post_name in os.listdir(fp):
                 if not post_name.endswith(ext): continue
