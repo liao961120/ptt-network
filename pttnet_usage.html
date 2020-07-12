@@ -13089,7 +13089,7 @@ div#notebook {
 </li>
 <li><p>資料</p>
 <ol>
-<li>至 LOPE Drive <code>Research/SemanticChange/</code> 下載<a href="https://drive.google.com/drive/folders/1EzCZ0XDKBHXRMW7ag4KbPyYkm_RWrFGh"><code>pttnet-data.zip</code></a></li>
+<li>至 LOPE Drive <code>Research/SemanticChange/</code> 下載<a href="https://drive.google.com/file/d/1OAn6M3UozwWw-fexpORtumJlLCHCmuDI"><code>pttnet-data.zip</code></a></li>
 <li>解壓後，<code>cd pttnet-data</code>，即可在此工作目錄工作</li>
 <li>下載 <a href="https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/liao961120/ptt-network/blob/master/pttnet_usage.ipynb"><code>pttnet_usage.ipynb</code></a> 至此資料夾 (跟 <code>data/</code> 同層)</li>
 </ol>
@@ -13173,8 +13173,8 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[2]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Num of nodes: {len(MG.nodes)}&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Num of edges: {len(MG.edges)}&quot;</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Num of nodes: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">MG</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Num of edges: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">MG</span><span class="o">.</span><span class="n">edges</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -37572,16 +37572,16 @@ Num of edges: 1286
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">原始</span>
-<span class="s2">    Num of nodes: {len(MG.nodes)}</span>
-<span class="s2">    Num of edges: {len(MG.edges)}</span>
+<span class="s2">    Num of nodes: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">MG</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span><span class="si">}</span><span class="s2"></span>
+<span class="s2">    Num of edges: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">MG</span><span class="o">.</span><span class="n">edges</span><span class="p">)</span><span class="si">}</span><span class="s2"></span>
 
 <span class="s2">同溫層</span>
-<span class="s2">    Num of nodes: {len(G_homo.nodes)}</span>
-<span class="s2">    Num of edges: {len(G_homo.edges)}</span>
+<span class="s2">    Num of nodes: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">G_homo</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span><span class="si">}</span><span class="s2"></span>
+<span class="s2">    Num of edges: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">G_homo</span><span class="o">.</span><span class="n">edges</span><span class="p">)</span><span class="si">}</span><span class="s2"></span>
 
 <span class="s2">異溫層</span>
-<span class="s2">    Num of nodes: {len(G_hetero.nodes)}</span>
-<span class="s2">    Num of edges: {len(G_hetero.edges)}</span>
+<span class="s2">    Num of nodes: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">G_hetero</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span><span class="si">}</span><span class="s2"></span>
+<span class="s2">    Num of edges: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">G_hetero</span><span class="o">.</span><span class="n">edges</span><span class="p">)</span><span class="si">}</span><span class="s2"></span>
 <span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
 </pre></div>
 
@@ -37752,8 +37752,8 @@ Num of edges: 1286
 <span class="p">}</span>
 <span class="n">MG</span> <span class="o">=</span> <span class="n">MultiGraph</span><span class="p">(</span><span class="n">edge_condition</span><span class="o">=</span><span class="n">conditions</span><span class="p">,</span> <span class="n">boards</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Boy-Girl&#39;</span><span class="p">],</span> <span class="n">years</span><span class="o">=</span><span class="p">[</span><span class="mi">2007</span><span class="p">])</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Num of nodes: {len(MG.nodes)}&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Num of edges: {len(MG.edges)}&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Num of nodes: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">MG</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Num of edges: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">MG</span><span class="o">.</span><span class="n">edges</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 
     </div>
@@ -37969,16 +37969,16 @@ Num of edges: 2287
 
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span>
 <span class="s2">原始</span>
-<span class="s2">    Num of nodes: {len(MG.nodes)}</span>
-<span class="s2">    Num of edges: {len(MG.edges)}</span>
+<span class="s2">    Num of nodes: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">MG</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span><span class="si">}</span><span class="s2"></span>
+<span class="s2">    Num of edges: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">MG</span><span class="o">.</span><span class="n">edges</span><span class="p">)</span><span class="si">}</span><span class="s2"></span>
 
 <span class="s2">同溫層</span>
-<span class="s2">    Num of nodes: {len(G_homo.nodes)}</span>
-<span class="s2">    Num of edges: {len(G_homo.edges)}</span>
+<span class="s2">    Num of nodes: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">G_homo</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span><span class="si">}</span><span class="s2"></span>
+<span class="s2">    Num of edges: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">G_homo</span><span class="o">.</span><span class="n">edges</span><span class="p">)</span><span class="si">}</span><span class="s2"></span>
 
 <span class="s2">異溫層</span>
-<span class="s2">    Num of nodes: {len(G_hetero.nodes)}</span>
-<span class="s2">    Num of edges: {len(G_hetero.edges)}</span>
+<span class="s2">    Num of nodes: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">G_hetero</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span><span class="si">}</span><span class="s2"></span>
+<span class="s2">    Num of edges: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">G_hetero</span><span class="o">.</span><span class="n">edges</span><span class="p">)</span><span class="si">}</span><span class="s2"></span>
 <span class="s2">&quot;&quot;&quot;</span><span class="p">)</span>
 </pre></div>
 
